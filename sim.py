@@ -10,13 +10,13 @@ import os
 def run_simulation(generate_wave=False):
     # Step 1: Compile the SystemVerilog files
     print("Compiling SystemVerilog files...")
-    subprocess.run(["xvlog", "-sv", "counter.sv", "counter_tb.sv", "-nolog", "-nojournal"], check=True)
+    subprocess.run(["xvlog", "-sv", "counter.sv", "counter_tb.sv", "-nolog"], check=True)
     
     # Step 2: Elaborate the design
     print("Elaborating design...")
     if generate_wave:
         # Add debug flag for waveform capture
-        subprocess.run(["xelab", "counter_tb", "-s", "counter_sim", "-debug", "all", "-nolog", "-nojournal"], check=True)
+        subprocess.run(["xelab", "counter_tb", "-s", "counter_sim", "-debug", "all", "-nolog"], check=True)
     else:
         subprocess.run(["xelab", "counter_tb", "-s", "counter_sim"], check=True)
     
@@ -25,9 +25,11 @@ def run_simulation(generate_wave=False):
     if generate_wave:
         # Create a simple Tcl script for waveform capture
         with open("wave.tcl", "w") as f:
-            f.write("log_wave -recursive *\n")
-            f.write("run all\n")
-            f.write("quit\n")
+            f.write("open_vcd waveform.vcd\n")  # Open VCD file
+            f.write("log_vcd [get_objects -r *]\n")  # Log all signals to VCD
+            f.write("run all\n")  # Run simulation
+            f.write("close_vcd\n")  # Close VCD file
+            f.write("quit\n")  # Exit XSim
         
         # Run with waveform capture
         subprocess.run(["xsim", "counter_sim", "-tclbatch", "wave.tcl"], check=True)
@@ -54,8 +56,7 @@ def main():
     run_simulation(args.wave)
     
     # If wave flag is set, open waveform
-    if args.wave:
-        open_waveform("waveform.wcfg")
+    open_waveform("waveform.vcd")
 
 if __name__ == "__main__":
     main()
