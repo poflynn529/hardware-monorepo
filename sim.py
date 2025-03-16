@@ -4,6 +4,7 @@
 import subprocess
 import argparse
 import logging
+import os
 
 XILINX_PATH = "/tools/Xilinx/Vivado/2024.2"
 UNISIM_VERILOG_PATH = f"{XILINX_PATH}/data/verilog/src"
@@ -13,7 +14,6 @@ UNISIM_INCLUDE_PATHS = [
 ]
 
 def run_simulation(generate_wave=False):
-    # Set environment variables to suppress log files
     env = os.environ.copy()
     env["XILINX_SUPPRESS_LOGS"] = "1"
     
@@ -26,8 +26,6 @@ def run_simulation(generate_wave=False):
         "xvlog", 
         "-sv",
         "-nolog",
-        "-nojournal",
-        "-notimingchecks",
         f"{UNISIM_VERILOG_PATH}/unisim_comp.v"
         ]
 
@@ -47,7 +45,6 @@ def run_simulation(generate_wave=False):
         "-L",
         "unisim",
         "-nolog",
-        "-nojournal",
         ]
     
     if generate_wave:
@@ -58,7 +55,11 @@ def run_simulation(generate_wave=False):
     ### Simulation ###
     logging.info(f"Running simulation...")
 
-    xsim_cmd = ["xsim", "sim", "-nolog", "-nojournal"]
+    xsim_cmd = [
+        "xsim", 
+        "sim", 
+        "-nolog",
+        ]
     
     if generate_wave:
         xsim_cmd.extend(["-tclbatch", "wave.tcl"])
@@ -69,6 +70,9 @@ def run_simulation(generate_wave=False):
 
 def open_waveform(waveform_file):
     subprocess.Popen(["surfer", waveform_file], shell=False)
+
+def cleanup():
+    subprocess.run(["rm", "xelab.pb", "xvlog.pb", "xsim.jou"])
 
 def main():
     parser = argparse.ArgumentParser(
@@ -82,6 +86,7 @@ def main():
     args = parser.parse_args()
     
     run_simulation(args.wave)
+    cleanup()
     
     if args.wave:
         open_waveform("waveform.vcd")
