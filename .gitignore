@@ -1,2 +1,4 @@
 xsim.dir
 .Xil
+*.wdb
+waveform.vcd

@@ -1,41 +1,71 @@
 #!/usr/bin/env python3
-"""
-Simple script to run XSim for SystemVerilog simulation
-"""
+# Simple script to run XSim for SystemVerilog simulation
 
 import subprocess
 import argparse
-import os
+import logging
+
+XILINX_PATH = "/tools/Xilinx/Vivado/2024.2"
+UNISIM_VERILOG_PATH = f"{XILINX_PATH}/data/verilog/src"
+UNISIM_INCLUDE_PATHS = [
+    f"{UNISIM_VERILOG_PATH}",
+    f"{UNISIM_VERILOG_PATH}/unisims"
+]
 
 def run_simulation(generate_wave=False):
-    # Step 1: Compile the SystemVerilog files
-    print("Compiling SystemVerilog files...")
-    subprocess.run(["xvlog", "-sv", "counter.sv", "counter_tb.sv", "-nolog"], check=True)
+    # Set environment variables to suppress log files
+    env = os.environ.copy()
+    env["XILINX_SUPPRESS_LOGS"] = "1"
     
-    # Step 2: Elaborate the design
-    print("Elaborating design...")
-    if generate_wave:
-        # Add debug flag for waveform capture
-        subprocess.run(["xelab", "counter_tb", "-s", "counter_sim", "-debug", "all", "-nolog"], check=True)
-    else:
-        subprocess.run(["xelab", "counter_tb", "-s", "counter_sim"], check=True)
+    ### Compilation ###
+    sv_files = ["fpgashark/xilinx_bram.sv", "fpgashark/xilinx_bram_tb.sv"]
     
-    # Step 3: Run the simulation
-    print("Running simulation...")
+    logging.info(f"Compiling SystemVerilog files: {', '.join(sv_files)}")
+    
+    xvlog_cmd = [
+        "xvlog", 
+        "-sv",
+        "-nolog",
+        "-nojournal",
+        "-notimingchecks",
+        f"{UNISIM_VERILOG_PATH}/unisim_comp.v"
+        ]
+
+    for path in UNISIM_INCLUDE_PATHS:
+        xvlog_cmd.extend(["-i", path])
+    xvlog_cmd.extend(sv_files)
+    
+    subprocess.run(xvlog_cmd, check=True, env=env)
+    
+    ### Elaboration ###
+    logging.info(f"Elaborating design...")
+    xelab_cmd = [
+        "xelab", 
+        "xilinx_bram_tb",
+        "-s",
+        "sim",
+        "-L",
+        "unisim",
+        "-nolog",
+        "-nojournal",
+        ]
+    
     if generate_wave:
-        # Create a simple Tcl script for waveform capture
-        with open("wave.tcl", "w") as f:
-            f.write("open_vcd waveform.vcd\n")  # Open VCD file
-            f.write("log_vcd [get_objects -r *]\n")  # Log all signals to VCD
-            f.write("run all\n")  # Run simulation
-            f.write("close_vcd\n")  # Close VCD file
-            f.write("quit\n")  # Exit XSim
-        
-        # Run with waveform capture
-        subprocess.run(["xsim", "counter_sim", "-tclbatch", "wave.tcl"], check=True)
+        xelab_cmd.extend(["-debug", "all"])
+    
+    subprocess.run(xelab_cmd, check=True, env=env)
+    
+    ### Simulation ###
+    logging.info(f"Running simulation...")
+
+    xsim_cmd = ["xsim", "sim", "-nolog", "-nojournal"]
+    
+    if generate_wave:
+        xsim_cmd.extend(["-tclbatch", "wave.tcl"])
     else:
-        # Run without waveform capture
-        subprocess.run(["xsim", "counter_sim", "-runall"], check=True)
+        xsim_cmd.append("-runall")
+    
+    subprocess.run(xsim_cmd, check=True, env=env)
 
 def open_waveform(waveform_file):
     subprocess.Popen(["surfer", waveform_file], shell=False)
@@ -49,14 +79,12 @@ def main():
         action="store_true",
         help="Generate waveform files and open in Surfer"
     )
-    
     args = parser.parse_args()
     
-    # Run the simulation
     run_simulation(args.wave)
     
-    # If wave flag is set, open waveform
-    open_waveform("waveform.vcd")
+    if args.wave:
+        open_waveform("waveform.vcd")
 
 if __name__ == "__main__":
     main()
