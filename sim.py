@@ -18,7 +18,21 @@ def run_simulation(generate_wave=False):
     env["XILINX_SUPPRESS_LOGS"] = "1"
     
     ### Compilation ###
-    sv_files = ["fpgashark/xilinx_bram.sv", "fpgashark/xilinx_bram_tb.sv"]
+    
+    # top_level = "xilinx_bram_tb"
+    # sv_files = [
+    #     "fpgashark/xilinx_bram.sv",
+    #     "fpgashark/xilinx_bram_tb.sv"
+    #     ]
+    
+    top_level = "packet_buffer_tb_top"
+    sv_files = [
+        "common/utils/utils.svh",
+        "common/pcap/pcap2axi4s.svh",
+        "fpgashark/packet_buffer/src/fifo36e2_wrapper.sv",
+        "fpgashark/packet_buffer/src/packet_buffer.sv",
+        "fpgashark/packet_buffer/tb/packet_buffer_tb_top.sv",
+    ]
     
     logging.info(f"Compiling SystemVerilog files: {', '.join(sv_files)}")
     
@@ -31,7 +45,8 @@ def run_simulation(generate_wave=False):
 
     for path in UNISIM_INCLUDE_PATHS:
         xvlog_cmd.extend(["-i", path])
-    xvlog_cmd.extend(sv_files)
+    for path in sv_files:
+        xvlog_cmd.extend(["-i", path])
     
     subprocess.run(xvlog_cmd, check=True, env=env)
     
@@ -39,9 +54,9 @@ def run_simulation(generate_wave=False):
     logging.info(f"Elaborating design...")
     xelab_cmd = [
         "xelab", 
-        "xilinx_bram_tb",
+        top_level,
         "-s",
-        "sim",
+        top_level,
         "-L",
         "unisim",
         "-nolog",
@@ -57,7 +72,7 @@ def run_simulation(generate_wave=False):
 
     xsim_cmd = [
         "xsim", 
-        "sim", 
+        top_level, 
         "-nolog",
         ]
     

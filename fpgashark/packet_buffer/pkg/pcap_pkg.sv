@@ -12,7 +12,7 @@ package pcap_pkg;
 
     localparam PACKET_HEADER_T_WIDTH = 32;
 
-    function automatic packet_header_t unpack(input logic [HEADER_WIDTH-1:0] logic_vector);
+    function automatic packet_header_t unpack(input logic [PACKET_HEADER_T_WIDTH-1:0] header_vector);
         packet_header_t header;
         
         header.packet_length = header_vector[15:0];

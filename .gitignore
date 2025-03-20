@@ -1,5 +1,6 @@
 xsim.dir
 .Xil
+.data
 *.wdb
 waveform.vcd
 *.jou

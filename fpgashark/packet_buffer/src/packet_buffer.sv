@@ -1,6 +1,8 @@
+import pcap_pkg::*;
+
 module packet_buffer #(
     parameter AXI_WIDTH = 64,
-    parameter OUTPUT_WIDTH = 8,
+    parameter OUTPUT_WIDTH = 8
 ) (
     input  logic                      clk_i,
     input  logic                      rst_i,
@@ -51,12 +53,12 @@ packet_buffer_write_controller #(
 ) write_controller_i (
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .header_i(tdata_r[AXI_WIDTH-1:0]),
+    .header_i(unpack(tdata_reg[PACKET_HEADER_T_WIDTH-1:0])),
     .input_ready_i(tready_o),
     .input_valid_i(tvalid_i),
     .output_ready_i(pkt_tready_i),
     .output_valid_i(pkt_tvalid_o),
-    .lane_sel_o(lane_write_sel_w),
+    .lane_sel_o(lane_write_sel_w)
 );
 
 generate
