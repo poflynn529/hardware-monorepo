@@ -7,38 +7,42 @@ module fifo36e2_wrapper #(
     parameter CLOCK_DOMAIN = "INDEPENDENT"
 
 ) (
-    input  logic         clk_i,     
-    input  logic         rst_i,     
-    input  logic         write_en_i,
-    input  logic         read_en_i, 
-    input  logic [63:0]  data_i,    
-    output logic [63:0]  data_o,    
+    input  logic                     clk_i,     
+    input  logic                     rst_i,     
+    input  logic                     write_en_i,
+    input  logic                     read_en_i, 
+    input  logic [WRITE_WIDTH - 1:0] data_i,    
+    output logic [READ_WIDTH - 1:0]  data_o
 );
 
+    logic [63:0] dout;
+
+    assign data_o = dout[READ_WIDTH -1:0];
+
     FIFO36E2 #(
-        .CASCADE_ORDER("NONE"),            // Not using cascading
-        .CLOCK_DOMAINS("INDEPENDENT"),     // Separate read and write clocks
-        .EN_ECC_PIPE("FALSE"),             // No ECC pipeline
-        .EN_ECC_READ("FALSE"),             // No ECC on read
-        .EN_ECC_WRITE("FALSE"),            // No ECC on write
-        .FIRST_WORD_FALL_THROUGH("FALSE"), // Standard FIFO behavior
-        .INIT(72'h000000000000000000),     // Initialize output to zeros
-        .PROG_EMPTY_THRESH(256),           // Programmable empty threshold
-        .PROG_FULL_THRESH(256),            // Programmable full threshold
-        .IS_RDCLK_INVERTED(1'b0),          // No clock inversion
-        .IS_RDEN_INVERTED(1'b0),           // No read enable inversion
-        .IS_RSTREG_INVERTED(1'b0),         // No register reset inversion
-        .IS_RST_INVERTED(1'b0),            // No reset inversion
-        .IS_WRCLK_INVERTED(1'b0),          // No write clock inversion
-        .IS_WREN_INVERTED(1'b0),           // No write enable inversion
-        .RDCOUNT_TYPE("RAW_PNTR"),         // Raw read pointer
-        .READ_WIDTH(READ_WIDTH),           // Configurable read width
-        .REGISTER_MODE("UNREGISTERED"),    // No output registers
-        .RSTREG_PRIORITY("RSTREG"),        // Reset priority
-        .SLEEP_ASYNC("FALSE"),             // Synchronous sleep
-        .SRVAL(72'h000000000000000000),    // Reset value
-        .WRCOUNT_TYPE("RAW_PNTR"),         // Raw write pointer
-        .WRITE_WIDTH(WRITE_WIDTH)          // Configurable write width
+        .CASCADE_ORDER("NONE"),                        // Not using cascading
+        .CLOCK_DOMAINS("INDEPENDENT"),                 // Separate read and write clocks
+        .EN_ECC_PIPE("FALSE"),                         // No ECC pipeline
+        .EN_ECC_READ("FALSE"),                         // No ECC on read
+        .EN_ECC_WRITE("FALSE"),                        // No ECC on write
+        .FIRST_WORD_FALL_THROUGH("FALSE"),             // Standard FIFO behavior
+        .INIT(72'h000000000000000000),                 // Initialize output to zeros
+        .PROG_EMPTY_THRESH(256),                       // Programmable empty threshold
+        .PROG_FULL_THRESH(256),                        // Programmable full threshold
+        .IS_RDCLK_INVERTED(1'b0),                      // No clock inversion
+        .IS_RDEN_INVERTED(1'b0),                       // No read enable inversion
+        .IS_RSTREG_INVERTED(1'b0),                     // No register reset inversion
+        .IS_RST_INVERTED(1'b0),                        // No reset inversion
+        .IS_WRCLK_INVERTED(1'b0),                      // No write clock inversion
+        .IS_WREN_INVERTED(1'b0),                       // No write enable inversion
+        .RDCOUNT_TYPE("RAW_PNTR"),                     // Raw read pointer
+        .READ_WIDTH(READ_WIDTH + READ_PARITY_WIDTH),   // Configurable read width
+        .REGISTER_MODE("UNREGISTERED"),                // No output registers
+        .RSTREG_PRIORITY("RSTREG"),                    // Reset priority
+        .SLEEP_ASYNC("FALSE"),                         // Synchronous sleep
+        .SRVAL(72'h000000000000000000),                // Reset value
+        .WRCOUNT_TYPE("RAW_PNTR"),                     // Raw write pointer
+        .WRITE_WIDTH(WRITE_WIDTH + WRITE_PARITY_WIDTH) // Configurable write width
     ) 
     FIFO36E2_inst (
         // Cascade Signals outputs: Multi-FIFO cascade signals - not connected
@@ -53,7 +57,7 @@ module fifo36e2_wrapper #(
         .SBITERR(),                   // 1-bit output: Single bit error status
         
         // Read Data outputs: Read output data
-        .DOUT(data_o),                // 64-bit output: FIFO data output bus
+        .DOUT(dout),                // 64-bit output: FIFO data output bus
         .DOUTP(),                     // 8-bit output: FIFO parity output bus - not used
         
         // Status outputs: Flags and other FIFO status outputs

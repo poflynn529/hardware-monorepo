@@ -1,4 +1,4 @@
-import pcap_pkg::*;
+import packet_buffer_pkg::*;
 
 module packet_buffer #(
     parameter AXI_WIDTH = 64,
@@ -14,79 +14,81 @@ module packet_buffer #(
 
     // Packet Buffer Interface
     output logic [OUTPUT_WIDTH - 1:0] pkt_tdata_o[AXI_WIDTH / OUTPUT_WIDTH],
-    output logic                      pkt_tvalid_o,
-    input  logic                      pkt_tready_i
+    output logic                      pkt_tvalid_o[AXI_WIDTH / OUTPUT_WIDTH],
+    input  logic                      pkt_tready_i[AXI_WIDTH / OUTPUT_WIDTH]
 );
 
-localparam NUM_BUFFER_LANES = AXI_WIDTH / OUTPUT_WIDTH;
+localparam NUM_BUFFER_LANES      = AXI_WIDTH / OUTPUT_WIDTH;
+localparam LANE_SELECT_IDX_WIDTH = $clog2(NUM_BUFFER_LANES);
 
 logic [AXI_WIDTH - 1:0] tdata_r;
 logic                   tvalid_r;
 
-logic [OUTPUT_WIDTH - 1:0] lane_data_r[NUM_BUFFER_LANES];
-logic                      lane_read_en_w[NUM_BUFFER_LANES-1:0];
-logic                      lane_write_en_w[NUM_BUFFER_LANES-1:0];
-logic                      lane_write_sel_w;
+logic [OUTPUT_WIDTH - 1:0]          lane_data_r[NUM_BUFFER_LANES];
+logic                               lane_read_en_w[NUM_BUFFER_LANES-1:0];
+logic                               lane_write_en_w[NUM_BUFFER_LANES-1:0];
+logic [LANE_SELECT_IDX_WIDTH - 1:0] lane_sel_idx_w;
 
 always_ff @(posedge clk_i) begin
+    if (tvalid_i && tready_o) begin
+        tdata_r <= tdata_i;
+        tvalid_r <= 1'b1;
+    end
+
     if (rst_i) begin
-        tdata_reg <= '0;
-        tvalid_reg <= 1'b0;
-    end else if (tvalid_i && tready_o) begin
-        tdata_reg <= tdata_i;
-        tvalid_reg <= 1'b1;
-    end else if (pkt_tready_i) begin
-        tvalid_reg <= 1'b0;
+        tdata_r <= '0;
+        tvalid_r <= 1'b0;
     end
 end
 
 always_comb begin
     for (int i = 0; i < NUM_BUFFER_LANES; i++) begin
-        lane_write_en[i] = tvalid_i && tready_o;
-        lane_read_en[i] = pkt_tready_i && !lane_empty[i];
+        lane_write_en_w[i] = tvalid_i && tready_o;
+        lane_read_en_w[i] = pkt_tready_i[i];
     end
 end
 
 packet_buffer_write_controller #(
-    .INPUT_WIDTH(AXI_WIDTH),
-    .OUTPUT_WIDTH(OUTPUT_WIDTH)
+    .NUM_LANES(NUM_BUFFER_LANES),
+    .HEADER_WIDTH(PACKET_HEADER_T_WIDTH),
+    .AXI_WIDTH(AXI_WIDTH),
+    .MAX_PACKET_LENGTH(MAX_PACKET_LENGTH),
+    .FIFO_DEPTH(500),
+    .LANE_SELECT_IDX_WIDTH(LANE_SELECT_IDX_WIDTH)
 ) write_controller_i (
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .header_i(unpack(tdata_reg[PACKET_HEADER_T_WIDTH-1:0])),
+    .header_i(unpack(tdata_r[PACKET_HEADER_T_WIDTH - 1:0])),
     .input_ready_i(tready_o),
     .input_valid_i(tvalid_i),
     .output_ready_i(pkt_tready_i),
     .output_valid_i(pkt_tvalid_o),
-    .lane_sel_o(lane_write_sel_w)
+    .lane_sel_o(lane_sel_idx_w)
 );
 
 generate
     for (genvar i = 0; i < NUM_BUFFER_LANES; i++) begin : g_buffer_lanes
         
         fifo36e2_wrapper #(
-            .WRITE_WIDTH(OUTPUT_WIDTH),
-            .WRITE_PARITY_WIDTH(0),
+            .WRITE_WIDTH(AXI_WIDTH),
+            .WRITE_PARITY_WIDTH(8),
             .READ_WIDTH(OUTPUT_WIDTH),
-            .READ_PARITY_WIDTH(0),
+            .READ_PARITY_WIDTH(1),
             .CLOCK_DOMAIN("COMMON")
         ) fifo_inst (
             .clk_i(clk_i),
             .rst_i(rst_i),
-            .write_en_i(lane_write_en[i]),
-            .read_en_i(lane_read_en[i]),
-            .data_i(tdata_reg),
-            .data_o(lane_data_out[i])
+            .write_en_i(lane_write_en_w[i]),
+            .read_en_i(lane_read_en_w[i]),
+            .data_i(tdata_r),
+            .data_o(lane_data_r[i])
         );
 
         always_comb begin
             // Only extract the relevant bytes from the 64-bit output
-            pkt_tdata_o[i] = lane_data_out[i][OUTPUT_WIDTH-1:0];
+            pkt_tdata_o[i] = lane_data_r[i][OUTPUT_WIDTH-1:0];
         end
     end
 endgenerate
-
-// Pass valid signal directly to output
-assign pkt_tvalid_o = tvalid_reg;
 
 endmodule

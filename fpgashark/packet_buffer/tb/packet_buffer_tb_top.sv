@@ -5,9 +5,8 @@
  * PCAP files converted to AXI4-Stream transactions.
  */
 
-`include "common/pcap2axi4s.svh"
-
- import pcap_pkg::*; // TODO Maybe this should be an SV header.
+import pcap_pkg::*;
+import packet_buffer_pkg::*;
 
 module packet_buffer_tb_top;
     
@@ -28,8 +27,8 @@ module packet_buffer_tb_top;
     
     // Packet Buffer output signals
     logic [OUTPUT_WIDTH-1:0] pkt_tdata_o[NUM_LANES];
-    logic                    pkt_tvalid_o;
-    logic                    pkt_tready_i;
+    logic                    pkt_tvalid_o[NUM_LANES];
+    logic                    pkt_tready_i[NUM_LANES];
     
     // Clock generation
     initial begin
@@ -48,17 +47,17 @@ module packet_buffer_tb_top;
         repeat (10) @(posedge clk);
 
         send_pcap_axi4s(
-            .clk(clk),
-            .rst_n(~rst),
-            .tdata(s_tdata),
-            .tlast(s_tlast),
-            .tvalid(s_tvalid),
-            .tready(s_tready),
-            .random_wait_percentage(0),
-            .inter_packet_idle_cycles(0),
-            .inter_beat_gap(0),
-            .interface_id(0),
-            .filename(".data/packet_buffer/packet_buffer_top_tb/test_pcap.pcap")
+            // .clk(clk),
+            // .rst(rst),
+            // .tdata(s_tdata),
+            // .tlast(s_tlast),
+            // .tvalid(s_tvalid),
+            // .tready(s_tready),
+            // .random_wait_percentage(0),
+            // .inter_packet_idle_cycles(0),
+            // .inter_beat_gap(0),
+            // .interface_id(0),
+            .filename(".data/packet_buffer_top_tb/test_pcap.pcap")
         );
     end
     
@@ -80,6 +79,44 @@ module packet_buffer_tb_top;
         .pkt_tvalid_o(pkt_tvalid_o),
         .pkt_tready_i(pkt_tready_i)
     );
+
+    task automatic send_pcap_axi4s(
+        // ref       logic              clk,
+        // ref       logic              rst,
+        // ref       logic [63:0]       tdata,
+        // ref       logic              tlast,
+        // ref       logic              tvalid,
+        // ref       logic              tready,
+        // input     int                random_wait_percentage,
+        // input     int                inter_packet_idle_cycles = 0,
+        // input     int                inter_beat_gap = 0,
+        // input     int                interface_id = 0, Probably not these fields, looks like its the loop.
+        input     string             filename
+    ); 
+        int                   current_packet_length;
+        int                   packet_count;  
+        packet_header_t       axi_header;
+        pcap_reader           reader;
+        int                   buffer_length;
+        byte                  buffer[];
+
+        reader = new(filename, 1);
+        reader.print_pcap_global_header();
+        reader.get_next_packet(buffer, buffer_length);
+
+        // while (reader.get_next_packet(buffer, buffer_length)) begin
+            
+        //     // axi_header.packet_length = buffer_length;
+        //     // axi_header.interface_id = interface_id;
+            
+        //     $display("[INFO] Sending packet #%0d with %0d bytes.", reader.packet_count, buffer_length);
+        //     wait(1);
+
+        // end
+        
+        $display("[DEBUG] Completed processing %0d packets from %s", reader.packet_count, filename);
+        $finish();
+    endtask
 
 
 endmodule 
