@@ -117,9 +117,9 @@ class pcap_reader;
             if (this.static_file_idx == this.static_file_length) begin
                 return 0;
             end else if (this.static_file_idx > this.static_file_length) begin
-                $fatal("Possible truncation or incorrect parsing of PCAP file.");
+                $fatal(1, "Possible truncation or incorrect parsing of PCAP file.");
             end
-            
+
             this.packet_count++;
 
             packet_header_temp_array = new[PCAP_PACKET_HEADER_T_WIDTH];
@@ -135,7 +135,7 @@ class pcap_reader;
             buffer_length = packet_header.incl_len;
         end else begin
             
-            // xelab 2024.1 segfaults with this code.
+            // xelab 2024.1 segfaults with this code. TODO Test with Questa.
             `ifdef XILINX_SIMULATOR
                 $fatal(1, "Xilinx Simulator does not support dynamic file reading.");
             `else

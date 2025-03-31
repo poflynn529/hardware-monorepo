@@ -13,30 +13,34 @@ module packet_buffer_tb_top;
     localparam AXI_WIDTH = 64;
     localparam OUTPUT_WIDTH = 8;
     localparam NUM_LANES = AXI_WIDTH / OUTPUT_WIDTH;
-    localparam CLK_PERIOD = 10; // 10ns = 100MHz
+    localparam CLK_PERIOD = 10;
+    localparam FILENAME = ".data/packet_buffer_top_tb/test_pcap.pcap";
     
     logic clk;
     logic rst;
+
+    logic [AXI_WIDTH - 1:0] s_tdata;
+    logic                   s_tvalid;
+    logic                   s_tready;
+    logic                   s_tlast;
+    logic [7:0]             s_tkeep;
     
-    // AXI4-Stream signals (input to DUT)
-    logic [AXI_WIDTH-1:0] s_tdata;
-    logic                 s_tvalid;
-    logic                 s_tready;
-    logic                 s_tlast;
-    logic [7:0]           s_tkeep;
+    logic [OUTPUT_WIDTH - 1:0] pkt_tdata_o[NUM_LANES];
+    logic                      pkt_tvalid_o[NUM_LANES];
+    logic                      pkt_tready_i[NUM_LANES];
+
+    packet_header_t header;
+    pcap_reader     reader;
+    byte            packet_buffer[];
+    int             packet_buffer_length;
+    byte            header_buffer[];
+    int             header_buffer_length;
     
-    // Packet Buffer output signals
-    logic [OUTPUT_WIDTH-1:0] pkt_tdata_o[NUM_LANES];
-    logic                    pkt_tvalid_o[NUM_LANES];
-    logic                    pkt_tready_i[NUM_LANES];
-    
-    // Clock generation
     initial begin
         clk = 0;
         forever #(CLK_PERIOD/2) clk = ~clk;
     end
     
-    // Reset generation
     initial begin
         rst = 1;
         repeat (5) @(posedge clk);
@@ -46,22 +50,34 @@ module packet_buffer_tb_top;
     initial begin
         repeat (10) @(posedge clk);
 
-        send_pcap_axi4s(
-            // .clk(clk),
-            // .rst(rst),
-            // .tdata(s_tdata),
-            // .tlast(s_tlast),
-            // .tvalid(s_tvalid),
-            // .tready(s_tready),
-            // .random_wait_percentage(0),
-            // .inter_packet_idle_cycles(0),
-            // .inter_beat_gap(0),
-            // .interface_id(0),
-            .filename(".data/packet_buffer_top_tb/test_pcap.pcap")
-        );
+        reader = new(FILENAME, 1);
+        reader.print_pcap_global_header();
+
+        while (reader.get_next_packet(packet_buffer, packet_buffer_length)) begin
+            
+            header.packet_length = packet_buffer_length;
+            header.interface_id  = 0;
+            pack_dynamic_byte_array(header, header_buffer, header_buffer_length);
+            
+            $display("[INFO] Sending packet #%0d with %0d bytes.", reader.packet_count, packet_buffer_length);
+            packet2axi4s(
+                .clk(clk),
+                .rst(rst),
+                .tdata(s_tdata),
+                .tlast(s_tlast),
+                .tvalid(s_tvalid),
+                .tready(s_tready),
+                .packet(packet_buffer),
+                .packet_length(packet_buffer_length),
+                .header(header_buffer),
+                .header_length(header_buffer_length)
+            );
+        end
+
+        $display("[DEBUG] Completed processing %0d packets from %s", reader.packet_count, FILENAME);
+        $finish();
     end
     
-    // Instantiate the DUT
     packet_buffer #(
         .AXI_WIDTH(AXI_WIDTH),
         .OUTPUT_WIDTH(OUTPUT_WIDTH)
@@ -69,52 +85,29 @@ module packet_buffer_tb_top;
         .clk_i(clk),
         .rst_i(rst),
         
-        // AXI4-Stream input
         .tdata_i(s_tdata),
         .tvalid_i(s_tvalid),
         .tready_o(s_tready),
         
-        // Packet Buffer output
         .pkt_tdata_o(pkt_tdata_o),
         .pkt_tvalid_o(pkt_tvalid_o),
         .pkt_tready_i(pkt_tready_i)
     );
 
-    task automatic send_pcap_axi4s(
-        // ref       logic              clk,
-        // ref       logic              rst,
-        // ref       logic [63:0]       tdata,
-        // ref       logic              tlast,
-        // ref       logic              tvalid,
-        // ref       logic              tready,
-        // input     int                random_wait_percentage,
-        // input     int                inter_packet_idle_cycles = 0,
-        // input     int                inter_beat_gap = 0,
-        // input     int                interface_id = 0, Probably not these fields, looks like its the loop.
-        input     string             filename
+    task automatic packet2axi4s(
+        const ref logic                   clk,
+        const ref logic                   rst,
+        ref       logic [AXI_WIDTH - 1:0] tdata,
+        ref       logic                   tlast,
+        ref       logic                   tvalid,
+        const ref logic                   tready,
+        input     byte                    packet[],
+        input     int                     packet_length,
+        input     byte                    header[],
+        input     int                     header_length
     ); 
-        int                   current_packet_length;
-        int                   packet_count;  
-        packet_header_t       axi_header;
-        pcap_reader           reader;
-        int                   buffer_length;
-        byte                  buffer[];
+    // TODO Implement
 
-        reader = new(filename, 1);
-        reader.print_pcap_global_header();
-
-        while (reader.get_next_packet(buffer, buffer_length)) begin
-            
-            // axi_header.packet_length = buffer_length;
-            // axi_header.interface_id = interface_id;
-            
-            $display("[INFO] Sending packet #%0d with %0d bytes.", reader.packet_count, buffer_length);
-            wait(1);
-
-        end
-        
-        $display("[DEBUG] Completed processing %0d packets from %s", reader.packet_count, filename);
-        $finish();
     endtask
 
 

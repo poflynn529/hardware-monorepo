@@ -23,4 +23,14 @@ function automatic packet_header_t unpack(input logic [PACKET_HEADER_T_WIDTH-1:0
     return header;
 endfunction
 
+function automatic void pack_dynamic_byte_array(input packet_header_t header, ref byte buffer[], ref int buffer_length);
+    buffer = new[PACKET_HEADER_T_WIDTH];
+    buffer_length = PACKET_HEADER_T_WIDTH;
+
+    buffer[0] = header.packet_length[15:8];
+    buffer[1] = header.packet_length[7:0];
+    buffer[2] = header.interface_id[15:8];
+    buffer[3] = header.interface_id[7:0];
+endfunction
+
 endpackage
