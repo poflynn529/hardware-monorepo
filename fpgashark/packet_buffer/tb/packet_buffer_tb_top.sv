@@ -102,17 +102,16 @@ module packet_buffer_tb_top;
 
         reader = new(filename, 1);
         reader.print_pcap_global_header();
-        reader.get_next_packet(buffer, buffer_length);
 
-        // while (reader.get_next_packet(buffer, buffer_length)) begin
+        while (reader.get_next_packet(buffer, buffer_length)) begin
             
-        //     // axi_header.packet_length = buffer_length;
-        //     // axi_header.interface_id = interface_id;
+            // axi_header.packet_length = buffer_length;
+            // axi_header.interface_id = interface_id;
             
-        //     $display("[INFO] Sending packet #%0d with %0d bytes.", reader.packet_count, buffer_length);
-        //     wait(1);
+            $display("[INFO] Sending packet #%0d with %0d bytes.", reader.packet_count, buffer_length);
+            wait(1);
 
-        // end
+        end
         
         $display("[DEBUG] Completed processing %0d packets from %s", reader.packet_count, filename);
         $finish();

@@ -6,9 +6,6 @@ package pcap_pkg;
 
 import utils::*;
 
-localparam PCAP_MAGIC_NUMBER = 32'hA1B2C3D4;
-localparam STATIC_BUFFER_SIZE_BYTES = 256000;
-
 typedef struct packed {
     int magic_number;
     shortint version_major;
@@ -25,6 +22,10 @@ typedef struct packed {
     int incl_len;
     int orig_len;
 } pcap_packet_header_t;
+
+localparam PCAP_MAGIC_NUMBER = 32'hA1B2C3D4;
+localparam STATIC_BUFFER_SIZE_BYTES = 256000;
+localparam PCAP_PACKET_HEADER_T_WIDTH = $bits(pcap_packet_header_t) / 8;
 
 class pcap_reader;
     pcap_global_header_t  global_header;
@@ -112,18 +113,26 @@ class pcap_reader;
         pcap_packet_header_t packet_header;
         byte packet_header_temp_array[];
 
-        if (is_static) begin
-            if (static_file_idx > static_file_length) return 0;
+        if (this.is_static) begin
+            if (this.static_file_idx == this.static_file_length) begin
+                return 0;
+            end else if (this.static_file_idx > this.static_file_length) begin
+                $fatal("Possible truncation or incorrect parsing of PCAP file.");
+            end
+            
             this.packet_count++;
 
-            packet_header_temp_array = new[$bits(pcap_packet_header_t) / 8];
-            copy_byte_array(this.static_buffer, packet_header_temp_array, $bits(pcap_packet_header_t) / 8, static_file_idx);
-            packet_header = pcap_packet_header_t'({<<byte{packet_header_temp_array}});
-            if (is_little_endian) packet_header = byte_swap_pcap_packet_header(packet_header);
-
-            static_file_idx += ($bits(pcap_packet_header_t) / 8) + packet_header.incl_len;
-            $display("DEBUG: Captured Length: %0d", packet_header.incl_len);
-
+            packet_header_temp_array = new[PCAP_PACKET_HEADER_T_WIDTH];
+            copy_byte_array(this.static_buffer, packet_header_temp_array, PCAP_PACKET_HEADER_T_WIDTH, this.static_file_idx);
+            packet_header = pcap_packet_header_t'({>>byte{packet_header_temp_array}});
+            if (this.is_little_endian) packet_header = byte_swap_pcap_packet_header(packet_header);
+            
+            buffer = new[packet_header.incl_len];
+            this.static_file_idx += (PCAP_PACKET_HEADER_T_WIDTH);
+            copy_byte_array(this.static_buffer, buffer, packet_header.incl_len, this.static_file_idx);
+            
+            this.static_file_idx += + packet_header.incl_len;
+            buffer_length = packet_header.incl_len;
         end else begin
             
             // xelab 2024.1 segfaults with this code.
@@ -134,11 +143,11 @@ class pcap_reader;
                 this.packet_count++;
 
                 bytes_read = $fread(packet_header, this.file_descriptor);
-                if (bytes_read != $bits(pcap_packet_header_t) / 8) begin
+                if (bytes_read != PCAP_PACKET_HEADER_T_WIDTH) begin
                     $fatal(1, "Error: Failed to read PCAP packet header");
                 end
 
-                if (is_little_endian) packet_header = byte_swap_pcap_packet_header(packet_header);
+                if (this.is_little_endian) packet_header = byte_swap_pcap_packet_header(packet_header);
                 
                 buffer_length = packet_header.incl_len;
                 buffer = new[buffer_length];
