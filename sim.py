@@ -10,10 +10,7 @@ XILINX_PATH = "/tools/Xilinx/Vivado/2024.2"
 UNISIM_VERILOG_PATH = f"{XILINX_PATH}/data/verilog/src"
 
 PROJECT_INCLUDE_DIRS = [
-    # UNISIM_VERILOG_PATH,
-    # f"{UNISIM_VERILOG_PATH}/unisims"
-    #"common_lib/pcap/pcap2axi4s.svh",
-    #"common_lib/utils",
+    "common_lib/utils",
 ]
 
 def run_simulation(generate_wave=False):

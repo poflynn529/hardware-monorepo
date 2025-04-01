@@ -59,10 +59,10 @@ packet_buffer_write_controller #(
     .clk_i(clk_i),
     .rst_i(rst_i),
     .header_i(unpack(tdata_r[PACKET_HEADER_T_WIDTH - 1:0])),
-    .input_ready_i(tready_o),
     .input_valid_i(tvalid_i),
     .output_ready_i(pkt_tready_i),
     .output_valid_i(pkt_tvalid_o),
+    .input_ready_o(tready_o),
     .lane_sel_o(lane_sel_idx_w)
 );
 

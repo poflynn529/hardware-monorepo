@@ -5,6 +5,9 @@
  * PCAP files converted to AXI4-Stream transactions.
  */
 
+`include "macros.svh"
+
+import utils::*;
 import pcap_pkg::*;
 import packet_buffer_pkg::*;
 
@@ -45,6 +48,7 @@ module packet_buffer_tb_top;
         rst = 1;
         repeat (5) @(posedge clk);
         rst = 0;
+        sim_timeout(clk, 200);
     end
 
     initial begin
@@ -59,7 +63,7 @@ module packet_buffer_tb_top;
             header.interface_id  = 0;
             pack_dynamic_byte_array(header, header_buffer, header_buffer_length);
             
-            $display("[INFO] Sending packet #%0d with %0d bytes.", reader.packet_count, packet_buffer_length);
+            `INFO($sformatf("Sending packet #%0d with %0d bytes.", reader.packet_count, packet_buffer_length));
             packet2axi4s(
                 .clk(clk),
                 .rst(rst),
@@ -72,9 +76,13 @@ module packet_buffer_tb_top;
                 .header(header_buffer),
                 .header_length(header_buffer_length)
             );
+
+            repeat($urandom_range(0, 20)) @(posedge clk);
         end
 
-        $display("[DEBUG] Completed processing %0d packets from %s", reader.packet_count, FILENAME);
+        repeat(25) @(posedge clk);
+
+        `INFO($sformatf("Completed processing %0d packets from %s", reader.packet_count, FILENAME));
         $finish();
     end
     
@@ -95,8 +103,8 @@ module packet_buffer_tb_top;
     );
 
     task automatic packet2axi4s(
-        const ref logic                   clk,
-        const ref logic                   rst,
+        ref logic                   clk,
+        ref logic                   rst,
         ref       logic [AXI_WIDTH - 1:0] tdata,
         ref       logic                   tlast,
         ref       logic                   tvalid,
@@ -105,10 +113,40 @@ module packet_buffer_tb_top;
         input     int                     packet_length,
         input     byte                    header[],
         input     int                     header_length
-    ); 
-    // TODO Implement
+    );
+    byte buffer[]           = new[packet_length + header_length];
+    int  num_axi_words_left = cdiv((buffer.size() * 8), AXI_WIDTH);
+    int  buffer_idx         = 0;
+
+    copy_byte_array(header, buffer, 0, header_length);
+    copy_byte_array(packet, buffer, header_length, packet_length);
+
+    while (num_axi_words_left != 0) begin
+        @(posedge clk);
+        tvalid = 1;
+        tlast = 0;
+        if (num_axi_words_left == 1) tlast = 1;
+        
+        // Copy buffer to the AXI word with zero padding if required.
+        `INFO($sformatf("buffer_idx: %d", buffer_idx));
+        for (int i = buffer_idx; i < buffer_idx + AXI_WIDTH / 8; i++) begin
+            if (i >= buffer.size()) begin
+                tdata[i * 8 +: 8] = 8'h00;
+            end else begin
+                tdata[i * 8 +: 8] = buffer[i];
+            end
+        end
+
+        if (tready == 1 && rst == 0) begin
+            // `INFO("Word transfered. Decrementing...");
+            buffer_idx += AXI_WIDTH / 8;
+            num_axi_words_left--;
+        end
+    end
+
+    @(posedge clk)
+    tvalid = 0;
 
     endtask
-
 
 endmodule 

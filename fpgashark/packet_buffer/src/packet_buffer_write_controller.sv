@@ -19,13 +19,13 @@ module packet_buffer_write_controller #(
     input  logic           clk_i,
     input  logic           rst_i,
 
-    input  logic           input_ready_i,
     input  logic           input_valid_i,
     input  packet_header_t header_i,
 
     input  logic           output_ready_i [NUM_LANES - 1:0],
     input  logic           output_valid_i [NUM_LANES - 1:0],
 
+    output logic           input_ready_o,
     output logic [LANE_SELECT_IDX_WIDTH - 1:0]          lane_sel_o
 );
 
@@ -38,6 +38,7 @@ module packet_buffer_write_controller #(
 
 
     assign lane_sel_o = lane_sel_idx_r;
+    assign input_ready_o = 1;
     
     // Find the FIFO with minimum fill level that can still accept the packet.
     function automatic logic[0:0][NUM_LANES - 1:0] find_min_lane();
@@ -63,7 +64,7 @@ module packet_buffer_write_controller #(
     
     always @(posedge clk_i) begin
 
-        if (input_valid_i && input_ready_i) begin
+        if (input_valid_i && input_ready_o) begin
             fifo_fill_level_r[lane_sel_idx_r] <= fifo_fill_level_r[lane_sel_idx_r] + 8;
             if (axi_transactions_counter_r == 0) begin
                 axi_transactions_counter_r <= (header_i.packet_length + (AXI_WIDTH / 8) - 1) / (AXI_WIDTH / 8); // TODO: Refactor this to use a common function.

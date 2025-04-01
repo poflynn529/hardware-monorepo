@@ -18,10 +18,19 @@ function automatic int open_file(string path, string mode);
     return file;
 endfunction
 
-function automatic void copy_byte_array(ref byte input_array[], ref byte output_array[], input int copy_length, input int start_idx);
+function automatic void copy_byte_array(ref byte input_array[], ref byte output_array[], input int start_idx, input int copy_length);
     for (int i = 0; i < copy_length; i++) begin
         output_array[i] = input_array[start_idx + i];
     end
 endfunction
+
+function automatic int cdiv(int numerator, int denominator);
+    return (numerator + denominator - 1) / denominator;
+endfunction
+
+task automatic sim_timeout(const ref logic clk, input int timeout);
+    repeat(timeout) @(posedge(clk));
+    $fatal(1, "Sim timeout reached");
+endtask
 
 endpackage

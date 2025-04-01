@@ -123,13 +123,13 @@ class pcap_reader;
             this.packet_count++;
 
             packet_header_temp_array = new[PCAP_PACKET_HEADER_T_WIDTH];
-            copy_byte_array(this.static_buffer, packet_header_temp_array, PCAP_PACKET_HEADER_T_WIDTH, this.static_file_idx);
+            copy_byte_array(this.static_buffer, packet_header_temp_array, this.static_file_idx, PCAP_PACKET_HEADER_T_WIDTH);
             packet_header = pcap_packet_header_t'({>>byte{packet_header_temp_array}});
             if (this.is_little_endian) packet_header = byte_swap_pcap_packet_header(packet_header);
             
             buffer = new[packet_header.incl_len];
             this.static_file_idx += (PCAP_PACKET_HEADER_T_WIDTH);
-            copy_byte_array(this.static_buffer, buffer, packet_header.incl_len, this.static_file_idx);
+            copy_byte_array(this.static_buffer, buffer, this.static_file_idx, packet_header.incl_len);
             
             this.static_file_idx += + packet_header.incl_len;
             buffer_length = packet_header.incl_len;
