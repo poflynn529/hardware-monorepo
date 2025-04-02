@@ -18,10 +18,27 @@ function automatic int open_file(string path, string mode);
     return file;
 endfunction
 
-function automatic void copy_byte_array(ref byte input_array[], ref byte output_array[], input int start_idx, input int copy_length);
+function automatic void copy_byte_array(
+    ref byte input_array[], 
+    ref byte output_array[], 
+    input int start_idx_input,
+    input int start_idx_output, 
+    input int copy_length
+);
     for (int i = 0; i < copy_length; i++) begin
-        output_array[i] = input_array[start_idx + i];
+        output_array[start_idx_output + i] = input_array[start_idx_input + i];
     end
+endfunction
+
+function automatic string byte_array_to_hex_string(byte data[]);
+  string result = "";
+  
+  foreach (data[i]) begin
+    if (i > 0) result = {result, " "};
+    result = {result, $sformatf("%02X", data[i])};
+  end
+  
+  return result;
 endfunction
 
 function automatic int cdiv(int numerator, int denominator);

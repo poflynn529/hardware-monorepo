@@ -108,7 +108,7 @@ class pcap_reader;
         return packet_header;
     endfunction
 
-    function automatic bit get_next_packet(ref byte buffer[], ref int buffer_length);
+    function automatic bit get_next_packet(ref byte buffer[]);
         int bytes_read;
         pcap_packet_header_t packet_header;
         byte packet_header_temp_array[];
@@ -123,16 +123,15 @@ class pcap_reader;
             this.packet_count++;
 
             packet_header_temp_array = new[PCAP_PACKET_HEADER_T_WIDTH];
-            copy_byte_array(this.static_buffer, packet_header_temp_array, this.static_file_idx, PCAP_PACKET_HEADER_T_WIDTH);
+            copy_byte_array(this.static_buffer, packet_header_temp_array, this.static_file_idx, 0, PCAP_PACKET_HEADER_T_WIDTH);
             packet_header = pcap_packet_header_t'({>>byte{packet_header_temp_array}});
             if (this.is_little_endian) packet_header = byte_swap_pcap_packet_header(packet_header);
             
             buffer = new[packet_header.incl_len];
             this.static_file_idx += (PCAP_PACKET_HEADER_T_WIDTH);
-            copy_byte_array(this.static_buffer, buffer, this.static_file_idx, packet_header.incl_len);
+            copy_byte_array(this.static_buffer, buffer, this.static_file_idx, 0, packet_header.incl_len);
             
             this.static_file_idx += + packet_header.incl_len;
-            buffer_length = packet_header.incl_len;
         end else begin
             
             // xelab 2024.1 segfaults with this code. TODO Test with Questa.
@@ -149,11 +148,10 @@ class pcap_reader;
 
                 if (this.is_little_endian) packet_header = byte_swap_pcap_packet_header(packet_header);
                 
-                buffer_length = packet_header.incl_len;
-                buffer = new[buffer_length];
+                buffer = new[packet_header.incl_len];
 
                 bytes_read = $fread(buffer, this.file_descriptor);
-                if (bytes_read != buffer_length) begin
+                if (bytes_read != packet_header.incl_len) begin
                     $fatal(1, "Error: Failed to read packet data at packet %0d", packet_count);
                 end
             `endif

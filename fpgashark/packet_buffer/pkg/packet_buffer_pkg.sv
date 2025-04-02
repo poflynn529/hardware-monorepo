@@ -11,8 +11,12 @@ typedef struct packed {
     logic [15:0] interface_id;
 } packet_header_t;
 
-localparam PACKET_HEADER_T_WIDTH = 32;
-localparam MAX_PACKET_LENGTH     = 1500;
+localparam PACKET_HEADER_T_WIDTH       = 32;
+localparam PACKET_HEADER_T_WIDTH_BYTES = 4;
+
+localparam MAX_ETH_FRAME_LENGTH        = 1500;
+localparam MIN_ETH_FRAME_LENGTH        = 64;
+localparam ETH_FCS_LENGTH              = 4;
 
 function automatic packet_header_t unpack(input logic [PACKET_HEADER_T_WIDTH-1:0] header_vector);
     packet_header_t header;
@@ -23,9 +27,8 @@ function automatic packet_header_t unpack(input logic [PACKET_HEADER_T_WIDTH-1:0
     return header;
 endfunction
 
-function automatic void pack_dynamic_byte_array(input packet_header_t header, ref byte buffer[], ref int buffer_length);
-    buffer = new[PACKET_HEADER_T_WIDTH];
-    buffer_length = PACKET_HEADER_T_WIDTH;
+function automatic void pack_dynamic_byte_array(input packet_header_t header, ref byte buffer[]);
+    buffer = new[PACKET_HEADER_T_WIDTH_BYTES];
 
     buffer[0] = header.packet_length[15:8];
     buffer[1] = header.packet_length[7:0];

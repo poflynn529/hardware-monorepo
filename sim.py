@@ -86,7 +86,8 @@ def run_simulation(generate_wave=False):
     subprocess.run(xsim_cmd, check=True, env=env)
 
 def open_waveform(waveform_file):
-    subprocess.Popen(["surfer", waveform_file], shell=False)
+    surfer_cmd = ["surfer", waveform_file, "-s", "wave.ron"]
+    subprocess.Popen(surfer_cmd, shell=False)
 
 def cleanup():
     subprocess.run(["rm", "xelab.pb", "xvlog.pb", "xsim.jou"])

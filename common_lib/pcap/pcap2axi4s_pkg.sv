@@ -1,74 +1,47 @@
-package pcap2axi4s;
+// Simulation only module to send a pcap as an AXI4Stream.
 
-// task automatic void send_packet_axi4s(
-//     ref   logic              clk,
-//     ref   logic              rst_n,
-//     ref   logic [63:0]       tdata,
-//     ref   logic              tlast,
-//     ref   logic              tvalid,
-//     ref   logic              tready,
-//             // Add idle cycles between packets if requested and not the first packet
-// if (idle_cycles > 0 && packet_count > 0) begin
-//     tvalid = 1'b0;
-//     for (cycles_waited = 0; cycles_waited < idle_cycles; cycles_waited++) begin
-//         @(posedge clk);
-//     end
-// end
+module packet2axi4s(
+    parameter AXI_WIDTH = 64
+) (
+    input  logic                   clk,
+    input  logic                   rst,
 
-// // Send the header first
-// tvalid = 1'b1;
-// tdata = {axi_header.packet_length, axi_header.interface_id, 32'h0}; // Pad to 64 bits
-// tkeep = 8'hF; // First 4 bytes valid
-// tlast = 1'b0;
+    output logic [AXI_WIDTH - 1:0] tdata,
+    output logic                   tlast,
+    output logic                   tvalid,
+    input  logic                   tready,
+);
+byte buffer[]           = new[packet_length + header_length];
+int  num_axi_words_left = cdiv((buffer.size() * 8), AXI_WIDTH);
+int  buffer_idx         = 0;
 
-// // Wait for ready signal
-// while (tready !== 1'b1) @(posedge clk);
-// @(posedge clk);
+copy_byte_array(header, buffer, 0, header_length);
+copy_byte_array(packet, buffer, header_length, packet_length);
 
-// // Add inter-beat gap if specified
-// if (inter_beat_gap > 0) begin
-//     tvalid = 1'b0;
-//     repeat (int'(inter_beat_gap)) @(posedge clk);
-// end
-
-// // Send packet data in 8-byte chunks
-// remaining_bytes = total_bytes;
-// for (int i = 0; i < total_bytes; i += 8) begin
-//     // Determine number of valid bytes in this beat
-//     int valid_bytes = (remaining_bytes >= 8) ? 8 : remaining_bytes;
+while (num_axi_words_left != 0) begin
+    @(posedge clk);
+    tvalid = 1;
+    tlast = 0;
+    if (num_axi_words_left == 1) tlast = 1;
     
-//     // Set tkeep mask based on valid bytes
-//     tkeep = 8'h0;
-//     for (int j = 0; j < valid_bytes; j++) begin
-//         tkeep[j] = 1'b1;
-//     end
-    
-//     // Set data (clear unused bytes to avoid X's in simulation)
-//     tdata = 64'h0;
-//     for (int j = 0; j < valid_bytes; j++) begin
-//         tdata[j*8 +: 8] = buffer[i+j];
-//     end
-    
-//     // Set tlast on final beat
-//     tlast = (i + 8 >= total_bytes) ? 1'b1 : 1'b0;
-//     tvalid = 1'b1;
-    
-//     // Wait for ready signal
-//     while (tready !== 1'b1) @(posedge clk);
-//     @(posedge clk);
-    
-//     // Add inter-beat gap if specified and not last beat
-//     if (inter_beat_gap > 0 && !tlast) begin
-//         tvalid = 1'b0;
-//         repeat (int'(inter_beat_gap)) @(posedge clk);
-//     end
-    
-//     remaining_bytes -= valid_bytes;
-// end
+    // Copy buffer to the AXI word with zero padding if required.
+    `INFO($sformatf("buffer_idx: %d", buffer_idx));
+    for (int i = buffer_idx; i < buffer_idx + AXI_WIDTH / 8; i++) begin
+        if (i >= buffer.size()) begin
+            tdata[i * 8 +: 8] = 8'h00;
+        end else begin
+            tdata[i * 8 +: 8] = buffer[i];
+        end
+    end
 
-// // Reset signals after packet
-// tvalid = 1'b0;
-// tlast = 1'b0;
-// endtask
+    if (tready == 1 && rst == 0) begin
+        // `INFO("Word transfered. Decrementing...");
+        buffer_idx += AXI_WIDTH / 8;
+        num_axi_words_left--;
+    end
+end
 
-endpackage
+@(posedge clk)
+tvalid = 0;
+
+endmodule
