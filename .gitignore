@@ -2,6 +2,6 @@ xsim.dir
 .Xil
 .data
 *.wdb
-waveform.vcd
+wave.tcl
 *.jou
 *.pb

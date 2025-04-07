@@ -21,8 +21,8 @@ localparam ETH_FCS_LENGTH              = 4;
 function automatic packet_header_t unpack(input logic [PACKET_HEADER_T_WIDTH-1:0] header_vector);
     packet_header_t header;
     
-    header.packet_length = header_vector[15:0];
-    header.interface_id  = header_vector[31:16];
+    header.packet_length = header_vector[31:16];
+    header.interface_id  = header_vector[15:0];
     
     return header;
 endfunction

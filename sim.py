@@ -13,7 +13,7 @@ PROJECT_INCLUDE_DIRS = [
     "common_lib/utils",
 ]
 
-def run_simulation(generate_wave=False):
+def run_simulation(top_level, generate_wave=False):
     env = os.environ.copy()
     env["XILINX_SUPPRESS_LOGS"] = "1"
     
@@ -25,11 +25,11 @@ def run_simulation(generate_wave=False):
     #     "fpgashark/xilinx_bram_tb.sv"
     #     ]
     
-    top_level = "packet_buffer_tb_top"
     sv_files = [
         "common_lib/utils/utils.sv",
         "common_lib/pcap/pcap_pkg.sv",
         "fpgashark/packet_buffer/src/fifo36e2_wrapper.sv",
+        "fpgashark/packet_buffer/src/axi4s_skid_buffer.sv",
         "fpgashark/packet_buffer/pkg/packet_buffer_pkg.sv",
         "fpgashark/packet_buffer/src/packet_buffer_write_controller.sv",
         "fpgashark/packet_buffer/src/packet_buffer.sv",
@@ -61,6 +61,8 @@ def run_simulation(generate_wave=False):
         "-L",
         "unisim",
         "-nolog",
+        "-debug",
+        "typical"
         ]
     
     if generate_wave:
@@ -79,11 +81,20 @@ def run_simulation(generate_wave=False):
         ]
     
     if generate_wave:
-        xsim_cmd.extend(["-tclbatch", "wave.tcl"])
+        xsim_cmd.extend(["-tclbatch", "tcl/capture_all_waves.tcl"])
     else:
         xsim_cmd.append("-runall")
     
     subprocess.run(xsim_cmd, check=True, env=env)
+
+def generate_waveform_tcl(top_level, testbench_root_dir):
+    tcl_cmds = [
+        f"open_wave_database {top_level}.wdb",
+        f"open_wave_config {testbench_root_dir}/waveform_configs/{top_level}.wcfg"
+    ]
+
+    with open("wave.tcl", 'w') as file:
+        file.write('\n'.join(tcl_cmds))
 
 def open_waveform(waveform_file):
     surfer_cmd = ["surfer", waveform_file, "-s", "wave.ron"]
@@ -113,11 +124,14 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
     
-    run_simulation(args.wave)
+    run_simulation("packet_buffer_tb_top", args.wave)
+    if args.wave:
+        generate_waveform_tcl("packet_buffer_tb_top", "fpgashark/packet_buffer/tb")
+
     cleanup()
     
-    if args.wave:
-        open_waveform("waveform.vcd")
+    # if args.wave:
+    #     open_waveform("waveform.vcd")
 
 if __name__ == "__main__":
     main()
