@@ -28,6 +28,7 @@ def run_simulation(top_level, generate_wave=False):
     sv_files = [
         "common_lib/utils/utils.sv",
         "common_lib/pcap/pcap_pkg.sv",
+        "fpgashark/packet_buffer/src/vector_muxcy.sv",
         "fpgashark/packet_buffer/src/fifo36e2_wrapper.sv",
         "fpgashark/packet_buffer/src/axi4s_skid_buffer.sv",
         "fpgashark/packet_buffer/pkg/packet_buffer_pkg.sv",
@@ -129,9 +130,6 @@ def main():
         generate_waveform_tcl("packet_buffer_tb_top", "fpgashark/packet_buffer/tb")
 
     cleanup()
-    
-    # if args.wave:
-    #     open_waveform("waveform.vcd")
 
 if __name__ == "__main__":
     main()

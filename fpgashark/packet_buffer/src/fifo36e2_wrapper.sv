@@ -12,7 +12,8 @@ module fifo36e2_wrapper #(
     input  logic                     write_en_i,
     input  logic                     read_en_i, 
     input  logic [WRITE_WIDTH - 1:0] data_i,    
-    output logic [READ_WIDTH - 1:0]  data_o
+    output logic [READ_WIDTH - 1:0]  data_o,
+    output logic                     empty_o
 );
 
     logic [63:0] dout;
@@ -62,7 +63,7 @@ module fifo36e2_wrapper #(
         
         // Status outputs: Flags and other FIFO status outputs
         .EMPTY(empty_o),              // 1-bit output: Empty
-        .FULL(full_o),                // 1-bit output: Full
+        .FULL(),                      // 1-bit output: Full
         .PROGEMPTY(),                 // 1-bit output: Programmable empty - not used
         .PROGFULL(),                  // 1-bit output: Programmable full - not used
         .RDCOUNT(),                   // 14-bit output: Read count - not used

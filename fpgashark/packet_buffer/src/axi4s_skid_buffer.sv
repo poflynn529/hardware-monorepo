@@ -27,18 +27,19 @@ module axi4s_skid_buffer #(
     assign m_tready_o = !buffer_valid_r || !skid_valid_r || s_tready_i;
     
     always @(posedge clk_i) begin
+        buffer_valid_r <= 1'b0;
+        skid_valid_r   <= 1'b0;
+
         if (s_tready_i && m_tvalid_i) begin
             buffer_data_r  <= m_tdata_i;
             buffer_valid_r <= 1'b1;
         end
             
         // Move data from buffer to skid if downstream stalls
-        if (!s_tready_i && s_tvalid_o) begin
+        if (!s_tready_i) begin
             skid_data_r    <= buffer_data_r;
             skid_valid_r   <= buffer_valid_r;
             buffer_valid_r <= 1'b0;
-        end else if (s_tready_i) begin
-            skid_valid_r <= 1'b0;
         end
 
         if (rst_i) begin

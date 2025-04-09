@@ -29,12 +29,15 @@ logic                   tlast_buffered_w;
 
 logic [AXI_WIDTH - 1:0] tdata_r;
 
-logic [OUTPUT_WIDTH - 1:0]          lane_data_r[NUM_BUFFER_LANES];
-logic                               lane_read_en_w[NUM_BUFFER_LANES-1:0];
-logic                               lane_write_en_w[NUM_BUFFER_LANES-1:0];
+logic [OUTPUT_WIDTH - 1:0]          lane_data_w [NUM_BUFFER_LANES];
+logic [OUTPUT_WIDTH - 1:0]          fifo_empty_w [NUM_BUFFER_LANES];
+logic                               lane_read_en_w [NUM_BUFFER_LANES];
+logic                               lane_write_en_w [NUM_BUFFER_LANES];
+logic                               lane_skid_ready_w [NUM_BUFFER_LANES];
 logic [LANE_SELECT_IDX_WIDTH - 1:0] lane_sel_idx_w;
+logic                               lane_sel_valid_w;
 
-// Register all signals as soon as they reach the module.
+// Register data on input to the module.
 axi4s_skid_buffer #(
     .AXI_WIDTH (AXI_WIDTH)
 ) axi4s_skid_buffer_i (
@@ -62,51 +65,72 @@ packet_buffer_write_controller #(
     .FIFO_DEPTH            (500),
     .LANE_SELECT_IDX_WIDTH (LANE_SELECT_IDX_WIDTH)
 ) write_controller_i (
-    .clk_i          (clk_i),
-    .rst_i          (rst_i),
-    .header_i       (unpack(tdata_buffered_w[AXI_WIDTH - 1:AXI_WIDTH - PACKET_HEADER_T_WIDTH])),
-    .input_valid_i  (tvalid_buffered_w),
-    .input_last_i   (tlast_buffered_w),
-    .output_ready_i (pkt_tready_i),
-    .output_valid_i (pkt_tvalid_o),
-    .input_ready_o  (tready_w),
-    .lane_sel_o     (lane_sel_idx_w)
+    .clk_i            (clk_i),
+    .rst_i            (rst_i),
+    .header_i         (unpack(tdata_buffered_w[AXI_WIDTH - 1:AXI_WIDTH - PACKET_HEADER_T_WIDTH])),
+    .input_valid_i    (tvalid_buffered_w),
+    .input_last_i     (tlast_buffered_w),
+    .output_ready_i   (pkt_tready_i),
+    .output_valid_i   (pkt_tvalid_o),
+    .input_ready_o    (tready_w),
+    .lane_sel_o       (lane_sel_idx_w),
+    .lane_sel_valid_o (lane_sel_valid_w)
 );
 
 // Register the data again while the write controller decides where to send it.
-always_ff @(posedge clk_i) begin
+always @(posedge clk_i) begin
     tdata_r <= tdata_buffered_w;
 end
 
 always_comb begin
     for (int i = 0; i < NUM_BUFFER_LANES; i++) begin
-        lane_write_en_w[i] = tvalid_i && tready_o;
-        lane_read_en_w[i] = pkt_tready_i[i];
+        lane_write_en_w[i] = 0;
     end
+
+    if (lane_sel_valid_w) lane_write_en_w[lane_sel_idx_w] = 1;
 end
 
 generate
     for (genvar i = 0; i < NUM_BUFFER_LANES; i++) begin : g_buffer_lanes
         
+        assign lane_read_en_w[i] = !fifo_empty_w[i] && lane_skid_ready_w[i];
+
         fifo36e2_wrapper #(
             .WRITE_WIDTH(AXI_WIDTH),
             .WRITE_PARITY_WIDTH(8),
             .READ_WIDTH(OUTPUT_WIDTH),
             .READ_PARITY_WIDTH(1),
             .CLOCK_DOMAIN("COMMON")
-        ) fifo_inst (
+        ) fifo_i (
             .clk_i(clk_i),
             .rst_i(rst_i),
             .write_en_i(lane_write_en_w[i]),
             .read_en_i(lane_read_en_w[i]),
             .data_i(tdata_r),
-            .data_o(lane_data_r[i])
+            .data_o(lane_data_w[i]),
+            .empty_o(fifo_empty_w[i])
         );
 
-        always_comb begin
-            // Only extract the relevant bytes from the 64-bit output
-            pkt_tdata_o[i] = lane_data_r[i][OUTPUT_WIDTH-1:0];
-        end
+        // Register egress data from the FIFOs.
+        axi4s_skid_buffer #(
+            .AXI_WIDTH (OUTPUT_WIDTH)
+        ) axi4s_skid_buffer_i (
+            .clk_i      (clk_i),
+            .rst_i      (rst_i),
+
+            // Upstream (Master Side)
+            .m_tdata_i  (lane_data_w[i][OUTPUT_WIDTH-1:0]),
+            .m_tvalid_i (!fifo_empty_w[i]),
+            .m_tready_o (lane_skid_ready_w[i]),
+            .m_tlast_i  (0),
+
+            // Downstream (Slave Side)
+            .s_tdata_o  (pkt_tdata_o[i]),
+            .s_tvalid_o (pkt_tvalid_o[i]),
+            .s_tready_i (pkt_tready_i[i]),
+            .s_tlast_o  ()
+        );
+
     end
 endgenerate
 

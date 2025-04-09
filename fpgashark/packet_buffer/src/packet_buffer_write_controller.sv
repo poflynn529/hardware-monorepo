@@ -30,7 +30,7 @@ module packet_buffer_write_controller #(
 
     output logic                               input_ready_o,
     output logic [LANE_SELECT_IDX_WIDTH - 1:0] lane_sel_o,
-    output logic                               lane_wr_valid_o
+    output logic                               lane_sel_valid_o
 );
 
     localparam AXI_TRANSACTIONS_COUNTER_WIDTH = $clog2(MAX_PACKET_LENGTH / AXI_WIDTH);
@@ -43,27 +43,23 @@ module packet_buffer_write_controller #(
     logic                                        lane_wr_valid_r;
     logic                                        input_ready_r;
 
-    // Find the FIFO with minimum fill level that can still accept the packet.
-    function automatic logic[0:0][NUM_LANES - 1:0] find_min_lane();
-        logic [LANE_SELECT_IDX_WIDTH - 1:0]         min_lane  = 0;
-        logic [FIFO_FILL_LEVEL_COUNTER_WIDTH - 1:0] min_level = FIFO_DEPTH * 8;
+    // TODO: The current counter will be off by 8 if there is a packet in it,
+    // we will need to modify it in the comparison loop for it to be correct.
 
-        for (int i = 0; i < NUM_LANES; i++) begin
-            if (fifo_fill_level_r[i] < min_level) begin
-                min_level = fifo_fill_level_r[i];
-                min_lane = i;
-            end
-        end
-        
-        return min_lane;
-    endfunction
+    // Find the FIFO with minimum fill level.
+    vector_muxcy #(
+        .NUM_INPUTS  (NUM_LANES),
+        .INPUT_WIDTH (FIFO_FILL_LEVEL_COUNTER_WIDTH)
+    ) vector_muxcy_i (
+        .data_i  (fifo_fill_level_r),
+        .muxcy_o (lane_sel_idx_w)
+    );
 
     assign lane_sel_o      = lane_sel_idx_r;
-    assign lane_wr_valid_o = lane_wr_valid_r;
+    assign lane_sel_valid_o = lane_wr_valid_r;
     assign input_ready_o   = input_ready_r;
-    assign lane_sel_idx_w  = find_min_lane();
 
-    // Lane selection cannot be updated when a write is in progress.
+    // Latch the FIFO value
     always @(posedge clk_i) begin
         if (axi_transactions_counter_r == 0) begin
             lane_sel_idx_r <= lane_sel_idx_w;
@@ -91,7 +87,7 @@ module packet_buffer_write_controller #(
         
         for (int i = 0; i < NUM_LANES; i++) begin
             if (output_valid_i[i] && output_ready_i[i]) begin
-                if (fifo_fill_level_r[i] > 0) begin // TODO: Add an assertion here to check this case.
+                if (fifo_fill_level_r[i] > 0) begin // TODO: Add an assertion here to check this case instead of if case.
                     fifo_fill_level_r[i] <= fifo_fill_level_r[i] - 1;
                 end
             end
