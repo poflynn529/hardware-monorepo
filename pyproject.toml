@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hardware-monorepo"
+version = "0.1.0"
+description = "Hardware design and verification repository using cocotb and verilator"
+requires-python = ">=3.8"
+dependencies = [
+    "cocotb>=1.8.0",
+    "pytest>=7.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=23.1.0",
+    "flake8>=6.0.0",
+    "isort>=5.12.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["fpgashark"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"

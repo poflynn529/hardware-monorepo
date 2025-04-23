@@ -1,7 +1,2 @@
-xsim.dir
-.Xil
+.venv
 .data
-*.wdb
-wave.tcl
-*.jou
-*.pb

@@ -3,10 +3,16 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Build/Test Commands
-- Simulate: `python3 sim.py`
-- Simulate with waveform: `python3 sim.py -w` or `python3 sim.py --wave`
-- Debug mode: `python3 sim.py -d` or `python3 sim.py --debug`
-- Waveforms in XSim using TCL scripts: `source tcl/capture_all_waves.tcl`
+- Basic simulation: `python3 sim.py`
+- Generate waveforms: `python3 sim.py --wave` or `python3 sim.py -w`
+- View waveforms with Surfer: `python3 sim.py --wave --gui` or `python3 sim.py -w -g`
+- Debug mode: `python3 sim.py --debug` or `python3 sim.py -d`
+- Clean build artifacts: `python3 sim.py --clean` or `python3 sim.py -c`
+
+## Environment Setup
+- Create Python virtual environment: `python3 -m venv .venv`
+- Activate virtual environment: `source .venv/bin/activate`
+- Install dependencies: `pip install -e .`
 
 ## Code Style Guidelines
 - SystemVerilog files (.sv) for RTL, header files (.svh) for macros
