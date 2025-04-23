@@ -6,4 +6,4 @@
 `define WARN(msg)  $display("%t, [WARNING] %s", $time, msg)
 `define ERROR(msg) $display("%t, [ERROR]   %s", $time, msg)
 
-`endif
+`endif // UTILS_SVH

@@ -5,6 +5,8 @@
 // 
 
 `include "macros.svh"
+`include "packet_buffer_monitor.svh"
+`include "packet_buffer_scoreboard.svh"
 
 import utils::*;
 import pcap_pkg::*;
@@ -40,18 +42,53 @@ module packet_buffer_tb_top;
     byte            packet_buffer[];
     byte            header_buffer[];
     
+    packet_buffer_scoreboard scoreboard;
+    packet_buffer_monitor    monitor;
+    
+    interface monitor_if;
+        logic clk;
+        logic rst;
+        logic [OUTPUT_WIDTH-1:0] pkt_tdata[NUM_LANES];
+        logic pkt_tvalid[NUM_LANES];
+        logic pkt_tready[NUM_LANES];
+    endinterface
+    
+    monitor_if mon_if();
+    
+    // Connect the monitor interface to the DUT signals
+    assign mon_if.clk = clk;
+    assign mon_if.rst = rst;
+    
+    generate
+        for (genvar i = 0; i < NUM_LANES; i++) begin : g_mon_if_connect
+            assign mon_if.pkt_tdata[i] = pkt_tdata_o[i];
+            assign mon_if.pkt_tvalid[i] = pkt_tvalid_o[i];
+            assign mon_if.pkt_tready[i] = pkt_tready_i[i];
+        end
+    endgenerate
+    
     initial begin
         clk = 0;
         forever #(CLK_PERIOD/2) clk = ~clk;
     end
     
     initial begin
+        for (int i = 0; i < NUM_LANES; i++) begin
+            pkt_tready_i[i] = 1; // Set all ready signals to 1 by default
+        end
+        
         rst = 1;
         repeat (5) @(posedge clk);
         rst = 0;
         sim_timeout(clk, 200);
     end
-
+    
+    initial begin
+        scoreboard = new();
+        monitor = new(mon_if, scoreboard);
+        monitor.run();
+    end
+    
     initial begin
         s_tdata = 0;
         s_tvalid = 0;
@@ -61,14 +98,28 @@ module packet_buffer_tb_top;
 
         reader = new(FILENAME, 1);
         reader.print_pcap_global_header();
-
+        
         while (reader.get_next_packet(packet_buffer)) begin
+            int channel;
             
+            // Create header with packet length and interface ID
             header.packet_length = packet_buffer.size();
-            header.interface_id  = 10;
+            
+            // Calculate which channel this packet should go to based on a simple hash
+            // Using modulo to distribute packets across channels 
+            channel = reader.packet_count % NUM_LANES;
+            header.interface_id = channel;
+            
+            // Add the expected packet to the scoreboard for verification
+            scoreboard.add_expect_packet(packet_buffer, channel);
+            
+            // Pack header into byte array
             pack_dynamic_byte_array(header, header_buffer);
             
-            `INFO($sformatf("Sending packet #%0d with %0d bytes.", reader.packet_count, packet_buffer.size()));
+            `INFO($sformatf("Sending packet #%0d with %0d bytes to channel %0d.", 
+                  reader.packet_count, packet_buffer.size(), channel));
+                  
+            // Send the packet to the DUT
             packet2axi4s(
                 .clk(clk),
                 .rst(rst),
@@ -80,19 +131,19 @@ module packet_buffer_tb_top;
                 .header(header_buffer)
             );
 
+            // Random delay between packets
             repeat($urandom_range(0, 20)) @(posedge clk);
         end
 
-        repeat(25) @(posedge clk);
+        // Allow time for processing to complete
+        repeat(100) @(posedge clk);
+        
+        // Print scoreboard report
+        scoreboard.report();
 
         `INFO($sformatf("Completed processing %0d packets from %s", reader.packet_count, FILENAME));
         $finish();
     end
-    
-    // clocking axi_cb @(posedge clk);
-    //     input  tready;
-    //     output tvalid, tlast, tdata;
-    // endclocking
 
     packet_buffer #(
         .AXI_WIDTH(AXI_WIDTH),
