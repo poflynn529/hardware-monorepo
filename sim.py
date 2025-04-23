@@ -24,7 +24,7 @@ VERILATOR_FLAGS = [
     "--timing",         # Include timing models
     "--assert",         # Enable assertions
     "--coverage",       # Enable coverage
-    "--language 1800-2012",  # Use SystemVerilog-2012
+    #"--language 1800-2012",  # Use SystemVerilog-2012
     "-Wall",            # Enable all warnings
     "-Wno-fatal",       # Continue after warnings
 ]
