@@ -1,6 +1,6 @@
 # hardware-monorepo
 
-Repository for FPGA hardware designs with (mostly) cocotb and verilator-based simulation.
+My personal repository for hardware designs, mostly targetting Xilinx FPGAs. Build system is FuseSoC and TBs are mostly cocotb.
 
 ## Setup
 
