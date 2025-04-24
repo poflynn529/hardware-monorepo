@@ -1,0 +1,16 @@
+CAPI=2:
+name: poflynn:common_lib:pcap
+description: PCAP processing utilities
+
+filesets:
+  sv:
+    files:
+      - pcap_pkg.sv
+      - pcap2axi4s_pkg.sv
+    file_type: systemVerilogSource
+    depend:
+      - poflynn:common_lib:utils
+
+targets:
+  default:
+    filesets: [sv]

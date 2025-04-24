@@ -1,0 +1,22 @@
+CAPI=2:
+name: poflynn:fpgashark:packet_buffer
+description: Packet buffer implementation for network packets
+
+filesets:
+  rtl:
+    files:
+      - pkg/packet_buffer_pkg.sv
+      - src/vector_muxcy.sv
+      - src/fifo36e2_wrapper.sv
+      - src/axi4s_skid_buffer.sv
+      - src/packet_buffer_write_controller.sv
+      - src/packet_buffer.sv
+    file_type: systemVerilogSource
+    depend:
+      - poflynn:common_lib:utils
+      - poflynn:verilator_xpm:primitives
+
+targets:
+  default:
+    filesets: [rtl]
+    toplevel: packet_buffer

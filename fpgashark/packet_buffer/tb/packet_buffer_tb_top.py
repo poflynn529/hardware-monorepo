@@ -1,16 +1,9 @@
-#!/usr/bin/env python3
-"""
-Packet Buffer CocoTB Testbench
-"""
-
-import pytest
 import random
 import logging
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, FallingEdge, ClockCycles, Timer
+from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb.result import TestFailure
-from cocotb.binary import BinaryValue
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

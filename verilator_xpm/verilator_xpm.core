@@ -1,0 +1,69 @@
+CAPI=2:
+name: poflynn:verilator_xpm:primitives
+description: Xilinx XPM primitives for Verilator simulation
+
+filesets:
+  xpm:
+    files:
+      - BUFGCE_DIV.v
+      - BUFG_GT.v
+      - BUFG.v
+      - CARRY4.v
+      - CARRY8.v
+      - CFGLUT5.v
+      - FDCE.v
+      - FDPE.v
+      - FDRE.v
+      - FDSE.v
+      - FIFO36E2.v
+      - GND.v
+      - IBUFDS_GTE3.v
+      - IBUFDS.v
+      - LDCE.v
+      - LDPE.v
+      - LUT1.v
+      - LUT2.v
+      - LUT3.v
+      - LUT4.v
+      - LUT5_D.v
+      - LUT5_L.v
+      - LUT5.v
+      - LUT6_2.v
+      - LUT6_D.v
+      - LUT6_L.v
+      - LUT6.v
+      - MUXF7_D.v
+      - MUXF7_L.v
+      - MUXF7.v
+      - MUXF8_D.v
+      - MUXF8_L.v
+      - MUXF8.v
+      - MUXF9.v
+      - ODDRE1.v
+      - RAM128X1D.v
+      - RAM128X1S.v
+      - RAM256X1D.v
+      - RAM256X1S.v
+      - RAM32M16.v
+      - RAM32M.v
+      - RAM32X1D.v
+      - RAM32X1S.v
+      - RAM512X1S.v
+      - RAM64M8.v
+      - RAM64M.v
+      - RAM64X1D.v
+      - RAM64X1S.v
+      - RAMB16BWER.v
+      - RAMB18E2.v
+      - RAMB36E2.v
+      - RAMB8BWER.v
+      - SRL16E.v
+      - SRL32E.v
+      - SRLC16E.v
+      - SRLC32E.v
+      - VCC.v
+    file_type: verilogSource
+
+targets:
+  default:
+    filesets: [xpm]

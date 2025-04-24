@@ -6,9 +6,8 @@
 // It parses the message header to determine how many AXI transactions are in the packet
 // and will ensure that the entire packet is written to the same FIFO.
 
-`include "macros.svh"
-
 import packet_buffer_pkg::*;
+import utils::*;
 
 module packet_buffer_write_controller #(
     parameter NUM_LANES,
@@ -101,4 +100,4 @@ module packet_buffer_write_controller #(
         end
     end
 
-endmodule 
+endmodule
