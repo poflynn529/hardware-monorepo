@@ -42,3 +42,19 @@ python3 sim.py --debug
 # Clean build artifacts:
 python3 sim.py --clean
 ```
+
+## Notes
+
+List of the packages I had to install for this project (May differ on your system):
+
+DNF / APT installable packages:
+```
+verilator
+gcc-c++
+python3.13-devel
+```
+
+Manual Downloads:
+```
+surfer
+```
