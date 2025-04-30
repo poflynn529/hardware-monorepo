@@ -198,7 +198,7 @@ module FIFO36E2
     // ECC computation functions
     // ========================================================================
 
-    function [7:0] fn_ecc
+    function automatic [7:0] fn_ecc
     (
         input        encode,
         input [63:0] d_i,
@@ -217,7 +217,7 @@ module FIFO36E2
     end
     endfunction
 
-    function [71:0] fn_cor_bit
+    function automatic [71:0] fn_cor_bit
     (
         input  [6:0] error_bit,
         input [63:0] d_i,

@@ -78,7 +78,7 @@ module packet_buffer_write_controller #(
         if (input_valid_i && input_ready_r) begin
             fifo_fill_level_r[lane_sel_idx_r] <= fifo_fill_level_r[lane_sel_idx_r] + 8;
             if (axi_transactions_counter_r == 0) begin
-                axi_transactions_counter_r <= cdiv(header_i.packet_length, AXI_WIDTH / 8);
+                axi_transactions_counter_r <= cdiv(int'(header_i.packet_length), AXI_WIDTH / 8)[AXI_TRANSACTIONS_COUNTER_WIDTH - 1:0];
             end else begin
                 axi_transactions_counter_r <= axi_transactions_counter_r - 1;
             end

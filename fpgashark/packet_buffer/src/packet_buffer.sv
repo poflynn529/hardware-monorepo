@@ -30,7 +30,7 @@ logic                   tlast_buffered_w;
 logic [AXI_WIDTH - 1:0] tdata_r;
 
 logic [OUTPUT_WIDTH - 1:0]          lane_data_w [NUM_BUFFER_LANES];
-logic [OUTPUT_WIDTH - 1:0]          fifo_empty_w [NUM_BUFFER_LANES];
+logic                               fifo_empty_w [NUM_BUFFER_LANES];
 logic                               lane_read_en_w [NUM_BUFFER_LANES];
 logic                               lane_write_en_w [NUM_BUFFER_LANES];
 logic                               lane_skid_ready_w [NUM_BUFFER_LANES];

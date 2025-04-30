@@ -11,11 +11,12 @@ module vector_muxcy #(
 
     always_comb begin
         best_level_w = (2 ** INPUT_WIDTH) - 1;
+        muxcy_o = 0;
 
         for (int i = 0; i < NUM_INPUTS; i++) begin
             if (data_i[i] < best_level_w) begin
                 best_level_w = data_i[i];
-                muxcy_o = i;
+                muxcy_o = i[$clog2(NUM_INPUTS) - 1:0];
             end
         end
     end
