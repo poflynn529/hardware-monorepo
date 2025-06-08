@@ -6,7 +6,8 @@ SIM      := verilator
 
 EXTRA_ARGS += --trace --trace-fst --trace-structs
 
-export PYTHONPATH := fpgashark/packet_buffer/tb
+PYTHONPATH := cocotb_lib/axi/:fpgashark/packet_buffer/tb/
+export PYTHONPATH
 
 VERILOG_SOURCES = \
 	verilator_xpm/FIFO36E2.v \

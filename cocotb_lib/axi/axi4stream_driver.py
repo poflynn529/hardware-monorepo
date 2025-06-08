@@ -70,4 +70,3 @@ class AXI4SDriver(Driver):
             self.bus.tvalid.value = 0
             self.bus.tlast.value = 0
             #self.bus.tkeep.value = 0
-            
