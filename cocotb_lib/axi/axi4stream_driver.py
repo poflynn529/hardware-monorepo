@@ -1,23 +1,9 @@
 from typing import override
 
 from cocotb.triggers import RisingEdge
-from cocotb_bus.bus import Bus
 from cocotb_bus.drivers import Driver
 
-class AXI4SBus(Bus):
-    """Convenience wrapper exposing the canonical AXI4-Stream handshake.
-
-    TODO: Extend *_signals* to expose additional side-band ports
-    such as TSTRB, TID, or TDEST.
-    """
-
-    _signals = [
-        "tdata",
-        "tvalid",
-        "tready",
-        "tlast",
-        "tkeep",
-    ]
+from axi4stream_bus import AXI4SBus
 
 class AXI4SDriver(Driver):
     """Generic AXI4-Stream driver based on *cocotb-bus* Driver.
