@@ -1,4 +1,8 @@
 .venv
 .data
+__pycache__/
 build
+sim_build
+*.fst
+results.xml
 hardware_monorepo.egg-info

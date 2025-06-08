@@ -5,6 +5,7 @@ filesets:
   tb:
     files:
       - packet_buffer_tb_top.py : {file_type: user, copyto: .}
+      - axi4stream_driver.py : {file_type: user, copyto: .}
     depend: [poflynn:fpgashark:packet_buffer]
 
 targets:
@@ -16,3 +17,4 @@ targets:
       timescale: 1ns/1ns
     filesets: [tb]
     toplevel: packet_buffer
+.venv/lib/python3.13/site-packages/cocotb/share/makefiles/Makefile.sim

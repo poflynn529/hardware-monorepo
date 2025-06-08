@@ -11,6 +11,8 @@ requires-python = ">=3.8"
 dependencies = [
     "cocotb>=1.8.0",
     "fusesoc>=2.0",
+    "pyshark>=0.6",
+    "pytest>=8.3.5"
 ]
 
 [tool.setuptools]
