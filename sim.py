@@ -1,22 +1,9 @@
 #!/usr/bin/env python3
-"""
-Simulation controller for hardware-monorepo using FuseSoC
-"""
 
 import argparse
 import os
 import subprocess
 import sys
-from pathlib import Path
-
-# Project structure constants
-PROJECT_ROOT = Path(__file__).resolve().parent
-
-def setup_env():
-    """Prepare the environment variables for simulation."""
-    os.environ["PYTHONPATH"] = str(PROJECT_ROOT)
-    os.environ["COCOTB_REDUCED_LOG_FMT"] = "1"
-    os.environ["COCOTB_LOG_LEVEL"] = "INFO"
 
 def parse_args():
     """Parse command line arguments."""
@@ -25,8 +12,6 @@ def parse_args():
                         help="Top-level module to simulate")
     parser.add_argument("--wave", "-w", action="store_true", 
                         help="Generate waveforms")
-    parser.add_argument("--debug", "-d", action="store_true", 
-                        help="Enable debug mode with additional logging")
     parser.add_argument("--gui", "-g", action="store_true", 
                         help="Open waveform viewer after simulation")
     parser.add_argument("--clean", "-c", action="store_true", 
@@ -35,8 +20,6 @@ def parse_args():
     return parser.parse_args()
 
 def run_fusesoc(args):
-    """Run FuseSoC with appropriate arguments."""
-    cmd = ["fusesoc", "--cores-root", str(PROJECT_ROOT), "run"]
     
     # Set target options based on top module
     if args.top == "packet_buffer":
@@ -90,9 +73,7 @@ def run_fusesoc(args):
 def main():
     """Main entry point."""
     args = parse_args()
-    setup_env()
-    
     return run_fusesoc(args)
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

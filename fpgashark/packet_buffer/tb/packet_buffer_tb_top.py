@@ -7,7 +7,7 @@ from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb.result import TestFailure
 from cocotb_bus.drivers import Driver
 
-from axi4stream_driver import AXI4SBus, AXI4SDriver
+from cocotb_lib.axi.axi4stream_driver import AXI4SBus, AXI4SDriver
 
 NUM_CHANNELS = 8
 PCAP_PATH = "/home/poflynn/src/hardware-monorepo/.data/packet_buffer_top_tb/test_pcap.pcap"
