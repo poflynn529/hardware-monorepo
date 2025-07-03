@@ -38,5 +38,7 @@ class AXI4SMonitor(Monitor):
                     for w in self._cur_words:
                         pkt.extend(w.to_bytes(self.byte_width, "little"))
                     self._cur_words.clear()
-                    log.SimLog(f"Received: {bytes(pkt)}")
+                    print(f"Received: {bytes(pkt)}")
                     self._recv(bytes(pkt))
+
+# Problem: tlast out never asserted.

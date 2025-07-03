@@ -13,21 +13,19 @@ from cocotb_lib.axi.axi4stream_driver import AXI4SDriver
 from cocotb_lib.axi.axi4stream_monitor import AXI4SMonitor
 from axi4s_skid_buffer_scoreboard import AXI4SSkidBufferScoreboard
 
+random.seed(0)
+
 def random_bytes(n: int) -> bytes:
     return bytes(random.getrandbits(8) for _ in range(n))
-
-def percent_to_prob(pct: int) -> float:
-    return max(0.0, min(100.0, pct)) / 100.0
 
 async def watchdog(clock, timeout_cycles: int):
     await ClockCycles(clock, timeout_cycles)
     raise TestFailure(f"Simulation timed out after {timeout_cycles} clock cycles")
 
-async def start_driver(driver) -> None:
-    for _ in range(10):
-        pkt_len = random.randint(1, 64)
+async def start_driver(driver, max_packet_size, nsamples) -> None:
+    for _ in range(nsamples):
+        pkt_len = random.randint(1, max_packet_size)
         pkt = random_bytes(pkt_len)
-        #expected_pkts.append(pkt)
         await driver.send(pkt)
 
 async def reset_sequence(reset, clock, cycles: int = 10) -> None:
@@ -46,10 +44,10 @@ async def test_skid_buffer(dut):
     # ------------------------------------------------------------------
     #  Configuration
     # ------------------------------------------------------------------
-    NSAMPLES = 10 # how many packets
-    MAX_PKT  = 64 # max payload length
-    STALL_PCT = 30 # % cycles not ready
-    stall_prob = percent_to_prob(STALL_PCT)
+    NSAMPLES = 25 # how many packets
+    MAX_PACKET_SIZE  = 64 # max payload length
+    SLAVE_STALL_PROBABILITY = 0.1 # Chance of AXI slave not ready.
+    MASTER_STALL_PROBABILITY = 0.0 # Chance of Master not ready (valid low).
 
     # ------------------------------------------------------------------
     #  Hook up interfaces
@@ -81,8 +79,19 @@ async def test_skid_buffer(dut):
     
     simulation_complete = Event()
 
-    driver = AXI4SDriver(clock, m_axis)
-    monitor = AXI4SMonitor(clock, s_axis, stall_probability=0.2)
+    driver = AXI4SDriver(
+        clock,
+        m_axis,
+        pre_delay_range=(0, 10),
+        post_delay_range=(0, 10),
+        stall_probability=MASTER_STALL_PROBABILITY
+    )
+
+    monitor = AXI4SMonitor(
+        clock,
+        s_axis,
+        stall_probability=SLAVE_STALL_PROBABILITY
+    )
 
     expected_pkts: Deque[bytes] = deque()
     #scoreboard = AXI4SSkidBufferScoreboard(dut, monitor, expected_pkts)
@@ -92,7 +101,7 @@ async def test_skid_buffer(dut):
     # ------------------------------------------------------------------
     cocotb.start_soon(Clock(clock, 10, 'ns').start(start_high=False))
     await reset_sequence(reset, clock)
-    cocotb.start_soon(start_driver(driver))
+    cocotb.start_soon(start_driver(driver, MAX_PACKET_SIZE, NSAMPLES))
 
     # ------------------------------------------------------------------
     #  Let the pipeline flush, then check results
