@@ -23,7 +23,8 @@ class AXI4SMonitor(Monitor):
         self.bus = bus
         self.stall_probability = stall_probability
         self.byte_width = len(self.bus.tdata) // 8
-        self._cur_words: Deque[int] = deque()
+        self._current_words: Deque[int] = deque()
+        self.name = None
         super().__init__(callback, event)
 
     async def _monitor_recv(self):
@@ -31,14 +32,13 @@ class AXI4SMonitor(Monitor):
             await RisingEdge(self.clock)
             self.bus.tready.value = int(random() > self.stall_probability)
             await ReadOnly()
+
             if int(self.bus.tvalid) and int(self.bus.tready):
-                self._cur_words.append(int(self.bus.tdata))
+                self._current_words.append(int(self.bus.tdata))
+
                 if int(self.bus.tlast):
                     pkt = bytearray()
-                    for w in self._cur_words:
+                    for w in self._current_words:
                         pkt.extend(w.to_bytes(self.byte_width, "little"))
-                    self._cur_words.clear()
-                    print(f"Received: {bytes(pkt)}")
+                    self._current_words.clear()
                     self._recv(bytes(pkt))
-
-# Problem: tlast out never asserted.

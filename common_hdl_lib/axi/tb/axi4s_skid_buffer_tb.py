@@ -4,9 +4,8 @@ from typing import Deque
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ClockCycles, Event, First
+from cocotb.triggers import RisingEdge, ClockCycles, Event
 from cocotb.result   import TestFailure
-from cocotb_bus.monitors import Monitor
 
 from cocotb_lib.axi.axi4stream_bus import AXI4SBus
 from cocotb_lib.axi.axi4stream_driver import AXI4SDriver
@@ -79,13 +78,7 @@ async def test_skid_buffer(dut):
     
     simulation_complete = Event()
 
-    driver = AXI4SDriver(
-        clock,
-        m_axis,
-        pre_delay_range=(0, 10),
-        post_delay_range=(0, 10),
-        stall_probability=MASTER_STALL_PROBABILITY
-    )
+    expected_pkts: list[bytes] = list()
 
     monitor = AXI4SMonitor(
         clock,
@@ -93,8 +86,16 @@ async def test_skid_buffer(dut):
         stall_probability=SLAVE_STALL_PROBABILITY
     )
 
-    expected_pkts: Deque[bytes] = deque()
-    #scoreboard = AXI4SSkidBufferScoreboard(dut, monitor, expected_pkts)
+    driver = AXI4SDriver(
+        clock,
+        m_axis,
+        pre_delay_range=(0, 10),
+        post_delay_range=(0, 10),
+        stall_probability=MASTER_STALL_PROBABILITY,
+        expect_queue=expected_pkts
+    )
+
+    scoreboard = AXI4SSkidBufferScoreboard(dut, monitor, expected_pkts)
 
     # ------------------------------------------------------------------
     #  Stimulus – send N random packets

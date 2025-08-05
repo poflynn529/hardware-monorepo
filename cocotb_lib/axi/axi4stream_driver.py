@@ -19,7 +19,7 @@ class AXI4SDriver(Driver):
         Instance of :class:`AXI4SBus` connected to the DUT port to drive.
     """
 
-    def __init__(self, clock, bus: AXI4SBus, pre_delay_range=None, post_delay_range=None, stall_probability=0.0):
+    def __init__(self, clock, bus: AXI4SBus, pre_delay_range=None, post_delay_range=None, stall_probability=0.0, expect_queue: list[bytes]=None):
         super().__init__()
         self.clock = clock
         self.bus = bus
@@ -27,6 +27,7 @@ class AXI4SDriver(Driver):
         self.pre_delay_range = pre_delay_range
         self.post_delay_range = post_delay_range
         self.stall_probability = stall_probability
+        self.expect_queue = expect_queue
 
         assert self.data_width % 8 == 0, "TDATA width must be an integer multiple of 8 bits"
         self.byte_width = self.data_width // 8
@@ -40,6 +41,10 @@ class AXI4SDriver(Driver):
     @override
     async def _driver_send(self, data: bytes, sync: bool = True):
         offset = 0
+
+        if self.expect_queue is not None:
+            print(f"Expecting: {data}")
+            self.expect_queue.append(data)
 
         if self.pre_delay_range:
             delay = random.randint(self.pre_delay_range[0], self.pre_delay_range[1])
