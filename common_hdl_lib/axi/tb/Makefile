@@ -9,7 +9,7 @@ EXTRA_ARGS += --trace --trace-fst --trace-structs
 # TODO: Figure out how to actually do this.
 #VERILATOR_COMPILE_ARGS += -GAXI_WIDTH=64
 
-PYTHONPATH := cocotb_lib/axi/:common_hdl_lib/axi/tb/
+PYTHONPATH := testbench_lib/axi/:testbench_lib/core/:common_hdl_lib/axi/tb/:
 export PYTHONPATH
 
 VERILOG_SOURCES = \
