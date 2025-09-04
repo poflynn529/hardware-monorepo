@@ -1,17 +1,11 @@
-[build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "hardware-monorepo"
 version = "0.1.0"
-description = "Hardware design and verification repository using cocotb and verilator"
-requires-python = ">=3.8"
-
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
 dependencies = [
-    "cocotb>=1.8.0",
+    "cocotb>=1.9.2",
+    "cocotb-bus>=0.2.1",
     "pyshark>=0.6",
 ]
-
-[tool.setuptools]
-py-modules = []

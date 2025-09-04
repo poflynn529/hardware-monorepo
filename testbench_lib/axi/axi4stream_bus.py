@@ -1,5 +1,6 @@
 from cocotb_bus.bus import Bus
 
+# TODO: Remove dependency on cocotb_bus
 class AXI4SBus(Bus):
     """Convenience wrapper exposing the canonical AXI4-Stream handshake.
 
