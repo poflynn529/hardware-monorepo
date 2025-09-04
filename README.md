@@ -8,6 +8,7 @@ My personal repository for hardware designs, mostly targetting Xilinx FPGAs. Bui
 
 - [Verilator](https://verilator.org/guide/latest/install.html)
 - [Surfer](https://surfer-project.org/)
+- [uv](https://github.com/astral-sh/uv)
 
 ### Virtual Environment
 
@@ -15,46 +16,25 @@ Create and activate a Python virtual environment:
 
 ```bash
 # Create virtual environment:
-python3 -m venv .venv
-
-# Activate virtual environment:
-source .venv/bin/activate
-
-# Install dependencies:
-pip install -e .
+uv venv
 ```
 
 ## Running Simulations
 
 ```bash
-#Basic simulation:
-python3 sim.py
+# Run cocotb and verilator:
+make -f common_hdl_lib/axi/tb/Makefile
 
-# Generate waveforms:
-python3 sim.py --wave
-
-# View waveforms with Surfer:
-python3 sim.py --wave --gui
-
-# Enable debug mode:
-python3 sim.py --debug
-
-# Clean build artifacts:
-python3 sim.py --clean
+# View the dump.fst output file:
+surfer dump.fst
 ```
 
 ## Notes
 
-List of the packages I had to install for this project (May differ on your system):
+List of the packages I had to install for this project that `dnf` didn't pick up (May differ on your system):
 
-DNF / APT installable packages:
 ```
-verilator
 gcc-c++
 python3.13-devel
-```
-
-Manual Downloads:
-```
-surfer
+zlib-devel
 ```
