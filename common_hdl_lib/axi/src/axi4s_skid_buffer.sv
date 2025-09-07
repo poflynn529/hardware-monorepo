@@ -20,7 +20,6 @@ module axi4s_skid_buffer #(
     output logic                       s_tlast_o,
     output logic [AXI_WIDTH / 8 - 1:0] s_tkeep_o
 );
-
     logic                       skid_valid_r;
     logic [AXI_WIDTH - 1:0]     skid_tdata_r;
     logic                       skid_tlast_r;

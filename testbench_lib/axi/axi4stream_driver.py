@@ -16,7 +16,7 @@ class AXI4SDriver(BaseDriver):
         self.port.tvalid.setimmediatevalue(0)
         self.port.tdata.setimmediatevalue(0)
         self.port.tlast.setimmediatevalue(0)
-        #self.port.tkeep.setimmediatevalue(0)
+        self.port.tkeep.setimmediatevalue(0)
 
     @override
     async def _drive_transaction(self, data: bytes):
@@ -28,7 +28,7 @@ class AXI4SDriver(BaseDriver):
 
             self.port.tdata.value = word
             self.port.tlast.value = int(offset + self.byte_width >= len(data))
-            #self.port.tkeep.value = (1 << len(chunk)) - 1
+            self.port.tkeep.value = (1 << len(chunk)) - 1
 
             while True:
                 self.port.tvalid.value = int(random.random() > self.stall_probability)
@@ -49,6 +49,6 @@ class AXI4SDriver(BaseDriver):
 
         self.port.tvalid.value = 0
         self.port.tlast.value = 0
-        #self.port.tkeep.value = 0
+        self.port.tkeep.value = 0
 
 # Issue with holding the data unneccesarily for an extra cycle after an input stall.

@@ -22,7 +22,7 @@
     autoload_sibling_state_files: None,
     autoreload_files: None,
     waves: Some((
-        source: Url("http://127.0.0.1:8911/hfbSq7oGsnCB4aALudeOOto5"),
+        source: Url("http://127.0.0.1:8911/pkwr3dXfOqDGMbivL2blk0Vl"),
         format: Fst,
         active_scope: Some(WaveScope((
             strs: [
@@ -149,76 +149,6 @@
             ],
         ),
         displayed_items: {
-            (2): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axi4s_skid_buffer",
-                        ],
-                        id: Wellen((3)),
-                    ),
-                    name: "rst_i",
-                    id: Wellen((15)),
-                ),
-                color: None,
-                background_color: None,
-                display_name: "rst_i",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-                height_scaling_factor: None,
-            )),
-            (16): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (17): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (21): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axi4s_skid_buffer",
-                        ],
-                        id: Wellen((3)),
-                    ),
-                    name: "s_tkeep_o",
-                    id: Wellen((25)),
-                ),
-                color: None,
-                background_color: None,
-                display_name: "s_tkeep_o [7:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-                height_scaling_factor: None,
-            )),
-            (20): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axi4s_skid_buffer",
-                        ],
-                        id: Wellen((3)),
-                    ),
-                    name: "s_tlast_o",
-                    id: Wellen((24)),
-                ),
-                color: None,
-                background_color: None,
-                display_name: "s_tlast_o",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-                height_scaling_factor: None,
-            )),
             (8): Variable((
                 variable_ref: (
                     path: (
@@ -233,131 +163,6 @@
                 color: None,
                 background_color: None,
                 display_name: "m_tvalid_i",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-                height_scaling_factor: None,
-            )),
-            (5): Divider((
-                color: None,
-                background_color: None,
-                name: None,
-            )),
-            (19): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axi4s_skid_buffer",
-                        ],
-                        id: Wellen((3)),
-                    ),
-                    name: "s_tready_i",
-                    id: Wellen((23)),
-                ),
-                color: None,
-                background_color: None,
-                display_name: "s_tready_i",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-                height_scaling_factor: None,
-            )),
-            (3): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axi4s_skid_buffer",
-                        ],
-                        id: Wellen((3)),
-                    ),
-                    name: "s_tdata_o",
-                    id: Wellen((21)),
-                ),
-                color: None,
-                background_color: None,
-                display_name: "s_tdata_o [63:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-                height_scaling_factor: None,
-            )),
-            (9): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axi4s_skid_buffer",
-                        ],
-                        id: Wellen((3)),
-                    ),
-                    name: "m_tready_o",
-                    id: Wellen((18)),
-                ),
-                color: None,
-                background_color: None,
-                display_name: "m_tready_o",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-                height_scaling_factor: None,
-            )),
-            (11): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axi4s_skid_buffer",
-                        ],
-                        id: Wellen((3)),
-                    ),
-                    name: "m_tkeep_i",
-                    id: Wellen((20)),
-                ),
-                color: None,
-                background_color: None,
-                display_name: "m_tkeep_i [7:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-                height_scaling_factor: None,
-            )),
-            (14): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axi4s_skid_buffer",
-                        ],
-                        id: Wellen((3)),
-                    ),
-                    name: "skid_tlast_r",
-                    id: Wellen((28)),
-                ),
-                color: None,
-                background_color: None,
-                display_name: "skid_tlast_r",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-                height_scaling_factor: None,
-            )),
-            (10): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axi4s_skid_buffer",
-                        ],
-                        id: Wellen((3)),
-                    ),
-                    name: "m_tlast_i",
-                    id: Wellen((19)),
-                ),
-                color: None,
-                background_color: None,
-                display_name: "m_tlast_i",
                 display_name_type: Unique,
                 manual_name: None,
                 format: None,
@@ -384,6 +189,11 @@
                 field_formats: [],
                 height_scaling_factor: None,
             )),
+            (16): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
             (13): Variable((
                 variable_ref: (
                     path: (
@@ -398,26 +208,6 @@
                 color: None,
                 background_color: None,
                 display_name: "skid_tkeep_r [7:0]",
-                display_name_type: Unique,
-                manual_name: None,
-                format: None,
-                field_formats: [],
-                height_scaling_factor: None,
-            )),
-            (6): Variable((
-                variable_ref: (
-                    path: (
-                        strs: [
-                            "axi4s_skid_buffer",
-                        ],
-                        id: Wellen((3)),
-                    ),
-                    name: "m_tdata_i",
-                    id: Wellen((16)),
-                ),
-                color: None,
-                background_color: None,
-                display_name: "m_tdata_i [63:0]",
                 display_name_type: Unique,
                 manual_name: None,
                 format: None,
@@ -444,6 +234,46 @@
                 field_formats: [],
                 height_scaling_factor: None,
             )),
+            (3): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axi4s_skid_buffer",
+                        ],
+                        id: Wellen((3)),
+                    ),
+                    name: "s_tdata_o",
+                    id: Wellen((21)),
+                ),
+                color: None,
+                background_color: None,
+                display_name: "s_tdata_o [63:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+                height_scaling_factor: None,
+            )),
+            (11): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axi4s_skid_buffer",
+                        ],
+                        id: Wellen((3)),
+                    ),
+                    name: "m_tkeep_i",
+                    id: Wellen((20)),
+                ),
+                color: None,
+                background_color: None,
+                display_name: "m_tkeep_i [7:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: Some("Binary (with groups)"),
+                field_formats: [],
+                height_scaling_factor: None,
+            )),
             (15): Variable((
                 variable_ref: (
                     path: (
@@ -461,6 +291,126 @@
                 display_name_type: Unique,
                 manual_name: None,
                 format: None,
+                field_formats: [],
+                height_scaling_factor: None,
+            )),
+            (14): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axi4s_skid_buffer",
+                        ],
+                        id: Wellen((3)),
+                    ),
+                    name: "skid_tlast_r",
+                    id: Wellen((28)),
+                ),
+                color: None,
+                background_color: None,
+                display_name: "skid_tlast_r",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+                height_scaling_factor: None,
+            )),
+            (6): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axi4s_skid_buffer",
+                        ],
+                        id: Wellen((3)),
+                    ),
+                    name: "m_tdata_i",
+                    id: Wellen((16)),
+                ),
+                color: None,
+                background_color: None,
+                display_name: "m_tdata_i [63:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+                height_scaling_factor: None,
+            )),
+            (2): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axi4s_skid_buffer",
+                        ],
+                        id: Wellen((3)),
+                    ),
+                    name: "rst_i",
+                    id: Wellen((15)),
+                ),
+                color: None,
+                background_color: None,
+                display_name: "rst_i",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+                height_scaling_factor: None,
+            )),
+            (9): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axi4s_skid_buffer",
+                        ],
+                        id: Wellen((3)),
+                    ),
+                    name: "m_tready_o",
+                    id: Wellen((18)),
+                ),
+                color: None,
+                background_color: None,
+                display_name: "m_tready_o",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+                height_scaling_factor: None,
+            )),
+            (10): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axi4s_skid_buffer",
+                        ],
+                        id: Wellen((3)),
+                    ),
+                    name: "m_tlast_i",
+                    id: Wellen((19)),
+                ),
+                color: None,
+                background_color: None,
+                display_name: "m_tlast_i",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+                height_scaling_factor: None,
+            )),
+            (21): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axi4s_skid_buffer",
+                        ],
+                        id: Wellen((3)),
+                    ),
+                    name: "s_tkeep_o",
+                    id: Wellen((25)),
+                ),
+                color: None,
+                background_color: None,
+                display_name: "s_tkeep_o [7:0]",
+                display_name_type: Unique,
+                manual_name: None,
+                format: Some("Binary (with groups)"),
                 field_formats: [],
                 height_scaling_factor: None,
             )),
@@ -484,12 +434,62 @@
                 field_formats: [],
                 height_scaling_factor: None,
             )),
+            (17): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (5): Divider((
+                color: None,
+                background_color: None,
+                name: None,
+            )),
+            (19): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axi4s_skid_buffer",
+                        ],
+                        id: Wellen((3)),
+                    ),
+                    name: "s_tready_i",
+                    id: Wellen((23)),
+                ),
+                color: None,
+                background_color: None,
+                display_name: "s_tready_i",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+                height_scaling_factor: None,
+            )),
+            (20): Variable((
+                variable_ref: (
+                    path: (
+                        strs: [
+                            "axi4s_skid_buffer",
+                        ],
+                        id: Wellen((3)),
+                    ),
+                    name: "s_tlast_o",
+                    id: Wellen((24)),
+                ),
+                color: None,
+                background_color: None,
+                display_name: "s_tlast_o",
+                display_name_type: Unique,
+                manual_name: None,
+                format: None,
+                field_formats: [],
+                height_scaling_factor: None,
+            )),
         },
         display_item_ref_counter: 21,
         viewports: [
             (
-                curr_left: (-0.009958178057223167),
-                curr_right: (0.03983271222889266),
+                curr_left: (0.23883535508150416),
+                curr_right: (0.28862624536762),
                 target_left: (0.0),
                 target_right: (1.0),
                 move_start_left: (0.0),
@@ -499,10 +499,10 @@
             ),
         ],
         cursor: Some((1, [
-            164781,
+            2585000,
         ])),
         markers: {},
-        focused_item: Some((14)),
+        focused_item: Some((18)),
         focused_transaction: (None, None),
         default_variable_name_type: Unique,
         scroll_offset: 0.0,
@@ -511,10 +511,7 @@
     )),
     drag_started: false,
     drag_source_idx: None,
-    drag_target_idx: Some((
-        before: (14),
-        level: 0,
-    )),
+    drag_target_idx: None,
     previous_waves: None,
     count: None,
     blacklisted_translators: [],

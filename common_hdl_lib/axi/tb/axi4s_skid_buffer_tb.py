@@ -55,7 +55,8 @@ async def test_skid_buffer(dut):
             "tdata"  : "s_tdata_o",
             "tvalid" : "s_tvalid_o",
             "tready" : "s_tready_i",
-            "tlast"  : "s_tlast_o"
+            "tlast"  : "s_tlast_o",
+            "tkeep"  : "s_tkeep_o",
         }
     )
 
@@ -66,7 +67,8 @@ async def test_skid_buffer(dut):
             "tdata"  : "m_tdata_i",
             "tvalid" : "m_tvalid_i",
             "tready" : "m_tready_o",
-            "tlast"  : "m_tlast_i"
+            "tlast"  : "m_tlast_i",
+            "tkeep"  : "m_tkeep_i",
         }
     )
 

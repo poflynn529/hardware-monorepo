@@ -23,7 +23,12 @@ class AXI4SMonitor(BaseMonitor):
 
                     if int(self.port.tvalid) and int(self.port.tready):
                         word = int(self.port.tdata)
-                        received_words.extend(word.to_bytes(self.port.tdata.value.n_bits // 8, "little"))
+                        mask = int(self.port.tkeep)
+                        word_bytes = word.to_bytes(self.port.tdata.value.n_bits // 8, "little")
+                        
+                        for i in range(len(word_bytes)):
+                            if (mask >> i) & 1:
+                                received_words.append(word_bytes[i])
 
                     if int(self.port.tlast) and int(self.port.tready): break # End of packet
 
