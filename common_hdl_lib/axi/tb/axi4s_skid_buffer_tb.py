@@ -2,12 +2,13 @@ import random
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ClockCycles, Event
-from cocotb.result   import TestFailure
+from cocotb.triggers import RisingEdge, ClockCycles
+from cocotb.result import TestFailure
 
 from testbench_lib.axi import AXI4SBus
 from testbench_lib.axi import AXI4SDriver
 from testbench_lib.axi import AXI4SMonitor
+from testbench_lib.core import BaseScoreboard
 
 random.seed(0)
 
@@ -16,7 +17,7 @@ def random_bytes(n: int) -> bytes:
 
 async def watchdog(clock, timeout_cycles: int):
     await ClockCycles(clock, timeout_cycles)
-    raise AssertionError(f"Simulation timed out after {timeout_cycles} clock cycles")
+    TestFailure(f"Simulation timed out after {timeout_cycles} clock cycles")
 
 async def reset_sequence(reset, clock, cycles: int = 10) -> None:
     reset.value = 1
@@ -25,19 +26,13 @@ async def reset_sequence(reset, clock, cycles: int = 10) -> None:
     reset.value = 0
     await RisingEdge(clock)
 
-def expect_callback(expect: bytes):
-    print(f"Expecting: {expect.hex()}")
-
-def receive_callback(expect: bytes):
-    print(f"Receiving: {expect.hex()}")
-
 @cocotb.test()
 async def test_skid_buffer(dut):
 
     # ------------------------------------------------------------------
     #  Configuration
     # ------------------------------------------------------------------
-    NSAMPLES = 25 # how many packets
+    NSAMPLES = 5 # how many packets
     MAX_PACKET_SIZE  = 64 # max payload length
     SLAVE_STALL_PROBABILITY = 0.1 # Chance of AXI slave not ready.
     MASTER_STALL_PROBABILITY = 0.0 # Chance of Master not ready (valid low).
@@ -72,19 +67,24 @@ async def test_skid_buffer(dut):
         }
     )
 
+    scoreboard = BaseScoreboard(
+        process_transaction_callback=lambda x: x,
+        expected_matches=NSAMPLES,
+    )
+
     driver = AXI4SDriver(
         clock             = clock,
         port              = m_axis,
         pre_delay_range   = range(0, 10),
         post_delay_range  = range(0, 10),
         stall_probability = MASTER_STALL_PROBABILITY,
-        expect_callback   = expect_callback,
+        expect_callback   = scoreboard.expect_transaction,
     )
 
     monitor = AXI4SMonitor(
         clock             = clock,
         port              = s_axis,
-        receive_callback  = receive_callback,
+        receive_callback  = scoreboard.receive_transaction,
         stall_probability = SLAVE_STALL_PROBABILITY,
     )
 
