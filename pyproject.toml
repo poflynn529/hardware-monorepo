@@ -8,4 +8,5 @@ dependencies = [
     "cocotb>=1.9.2",
     "cocotb-bus>=0.2.1",
     "pyshark>=0.6",
+    "pytest>=8.4.2",
 ]
