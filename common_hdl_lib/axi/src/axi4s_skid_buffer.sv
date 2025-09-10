@@ -39,7 +39,7 @@ module axi4s_skid_buffer #(
             buffer_tlast_r <= m_tlast_i;
             buffer_tkeep_r <= m_tkeep_i;
             buffer_valid_r <= 1;
-        end else if (skid_valid_r) begin
+        end else if (skid_valid_r && buffer_valid_r) begin
             buffer_valid_r <= 1;
         end else begin
             buffer_valid_r <= 0;

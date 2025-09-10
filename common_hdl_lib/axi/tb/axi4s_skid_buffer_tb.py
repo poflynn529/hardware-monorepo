@@ -8,16 +8,16 @@ from cocotb.result import TestFailure
 from testbench_lib.axi import AXI4SBus
 from testbench_lib.axi import AXI4SDriver
 from testbench_lib.axi import AXI4SMonitor
-from testbench_lib.core import BaseScoreboard
+from testbench_lib.core import BaseScoreboard, Bytes
 
 random.seed(0)
 
-def random_bytes(n: int) -> bytes:
-    return bytes(random.getrandbits(8) for _ in range(n))
+def random_bytes(n: int) -> Bytes:
+    return Bytes(random.getrandbits(8) for _ in range(n))
 
 async def watchdog(clock, timeout_cycles: int):
     await ClockCycles(clock, timeout_cycles)
-    TestFailure(f"Simulation timed out after {timeout_cycles} clock cycles")
+    raise TimeoutError(f"Simulation timed out after {timeout_cycles} clock cycles")
 
 async def reset_sequence(reset, clock, cycles: int = 10) -> None:
     reset.value = 1
@@ -32,10 +32,10 @@ async def test_skid_buffer(dut):
     # ------------------------------------------------------------------
     #  Configuration
     # ------------------------------------------------------------------
-    NSAMPLES = 5 # how many packets
+    NSAMPLES = 10000 # how many packets
     MAX_PACKET_SIZE  = 64 # max payload length
     SLAVE_STALL_PROBABILITY = 0.1 # Chance of AXI slave not ready.
-    MASTER_STALL_PROBABILITY = 0.0 # Chance of Master not ready (valid low).
+    MASTER_STALL_PROBABILITY = 0.1 # Chance of Master not ready (valid low).
 
     # ------------------------------------------------------------------
     #  Hook up interfaces
@@ -100,8 +100,4 @@ async def test_skid_buffer(dut):
     driver.load_transaction_queue(transactions)
     driver.start()
 
-    await watchdog(clock, 1000)
-
-    #scoreboard.check_complete()
-
-    dut._log.info("Skid buffer passed all scoreboard checks with back-pressure.")
+    await watchdog(clock, 1000000)

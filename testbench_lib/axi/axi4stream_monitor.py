@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import override
 
 from cocotb.triggers import RisingEdge, ReadOnly
-from testbench_lib.core import BaseMonitor
+from testbench_lib.core import BaseMonitor, Bytes
 
 @dataclass
 class AXI4SMonitor(BaseMonitor):
@@ -11,7 +11,7 @@ class AXI4SMonitor(BaseMonitor):
     stall_probability: float
 
     @override
-    async def _receive(self) -> bytes:
+    async def _receive(self) -> Bytes:
         while True:
             await RisingEdge(self.clock)
             self.port.tready.value = int(random() > self.stall_probability)
@@ -25,7 +25,7 @@ class AXI4SMonitor(BaseMonitor):
                         word = int(self.port.tdata)
                         mask = int(self.port.tkeep)
                         word_bytes = word.to_bytes(self.port.tdata.value.n_bits // 8, "little")
-                        
+
                         for i in range(len(word_bytes)):
                             if (mask >> i) & 1:
                                 received_words.append(word_bytes[i])
@@ -36,7 +36,7 @@ class AXI4SMonitor(BaseMonitor):
                     self.port.tready.value = int(random() > self.stall_probability)
                     await ReadOnly()
 
-                self.receive_callback(bytes(received_words))
+                self.receive_callback(Bytes(received_words))
 
             else:
                 continue

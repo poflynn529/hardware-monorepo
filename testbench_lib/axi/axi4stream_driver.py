@@ -2,7 +2,7 @@ import random
 from dataclasses import dataclass
 from typing import override
 from cocotb.triggers import RisingEdge, ReadOnly
-from testbench_lib.core import BaseDriver
+from testbench_lib.core import BaseDriver, Bytes
 
 @dataclass
 class AXI4SDriver(BaseDriver):
@@ -19,7 +19,7 @@ class AXI4SDriver(BaseDriver):
         self.port.tkeep.setimmediatevalue(0)
 
     @override
-    async def _drive_transaction(self, data: bytes):
+    async def _drive_transaction(self, data: Bytes):
         offset = 0
 
         while offset < len(data):

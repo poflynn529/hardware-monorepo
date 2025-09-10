@@ -19,7 +19,6 @@ class BaseScoreboard:
             if self.expect_queue[0] == self.receive_queue[0]:
                 self.expect_queue.popleft()
                 self.receive_queue.popleft()
-                print("Match!")
                 self.received_matches += 1
             else:
                 raise ValueError(f"Scoreboard mismatch: expected {self.expect_queue[0]}, received {self.receive_queue[0]}")
