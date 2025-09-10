@@ -3,12 +3,9 @@ import random
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, ClockCycles
-from cocotb.result import TestFailure
 
-from testbench_lib.axi import AXI4SBus
-from testbench_lib.axi import AXI4SDriver
-from testbench_lib.axi import AXI4SMonitor
-from testbench_lib.core import BaseScoreboard, Bytes
+from testbench_lib.axi import AXI4SBus, AXI4SDriver, AXI4SMonitor
+from testbench_lib.core import BaseScoreboard, Bytes, Module
 
 random.seed(0)
 
@@ -28,10 +25,12 @@ async def reset_sequence(reset, clock, cycles: int = 10) -> None:
 
 @cocotb.test()
 async def test_skid_buffer(dut):
+    module = Module(dut)
 
     # ------------------------------------------------------------------
     #  Configuration
     # ------------------------------------------------------------------
+
     NSAMPLES = 10000 # how many packets
     MAX_PACKET_SIZE  = 64 # max payload length
     SLAVE_STALL_PROBABILITY = 0.1 # Chance of AXI slave not ready.
@@ -40,12 +39,9 @@ async def test_skid_buffer(dut):
     # ------------------------------------------------------------------
     #  Hook up interfaces
     # ------------------------------------------------------------------
-    clock = dut.clk_i
-    reset = dut.rst_i
 
     s_axis = AXI4SBus(
-        entity  = dut,
-        name    = None,
+        module  = module,
         signals = {
             "tdata"  : "s_tdata_o",
             "tvalid" : "s_tvalid_o",
@@ -56,8 +52,7 @@ async def test_skid_buffer(dut):
     )
 
     m_axis = AXI4SBus(
-        entity  = dut,
-        name    = None,
+        module  = module,
         signals = {
             "tdata"  : "m_tdata_i",
             "tvalid" : "m_tvalid_i",
@@ -73,7 +68,7 @@ async def test_skid_buffer(dut):
     )
 
     driver = AXI4SDriver(
-        clock             = clock,
+        clock             = module.clk_i,
         port              = m_axis,
         pre_delay_range   = range(0, 10),
         post_delay_range  = range(0, 10),
@@ -82,7 +77,7 @@ async def test_skid_buffer(dut):
     )
 
     monitor = AXI4SMonitor(
-        clock             = clock,
+        clock             = module.clk_i,
         port              = s_axis,
         receive_callback  = scoreboard.receive_transaction,
         stall_probability = SLAVE_STALL_PROBABILITY,
@@ -91,13 +86,13 @@ async def test_skid_buffer(dut):
     # ------------------------------------------------------------------
     #  Stimulus – send N random packets
     # ------------------------------------------------------------------
-    cocotb.start_soon(Clock(clock, 10, 'ns').start(start_high=False))
+    cocotb.start_soon(Clock(module.clk_i, 10, 'ns').start(start_high=False))
     monitor.start()
 
-    await reset_sequence(reset, clock)
+    await reset_sequence(module.rst_i, module.clk_i)
 
     transactions = [random_bytes(random.randint(1, MAX_PACKET_SIZE)) for _ in range(NSAMPLES)]
     driver.load_transaction_queue(transactions)
     driver.start()
 
-    await watchdog(clock, 1000000)
+    await watchdog(module.clk_i, 1000000)

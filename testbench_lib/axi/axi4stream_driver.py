@@ -9,7 +9,7 @@ class AXI4SDriver(BaseDriver):
     stall_probability: float = 0.0
 
     def __post_init__(self):
-        self.axi_width = self.port.tdata.value.n_bits
+        self.axi_width = self.port.tdata.width()
         assert self.axi_width % 8 == 0, "TDATA width must be an integer multiple of 8 bits"
         self.byte_width = self.axi_width // 8
 
@@ -39,7 +39,7 @@ class AXI4SDriver(BaseDriver):
 
             # Wait for handshake.
             while True:
-                if int(self.port.tready.value):
+                if self.port.tready.value:
                     break
                 await RisingEdge(self.clock)
                 await ReadOnly()
@@ -50,5 +50,3 @@ class AXI4SDriver(BaseDriver):
         self.port.tvalid.value = 0
         self.port.tlast.value = 0
         self.port.tkeep.value = 0
-
-# Issue with holding the data unneccesarily for an extra cycle after an input stall.

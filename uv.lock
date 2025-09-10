@@ -28,15 +28,6 @@ wheels = [
 ]
 
 [[package]]
-name = "cocotb-bus"
-version = "0.2.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cocotb" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b6/2b/71975ab8c15f9a2c4c4fe9da4a873ea164eb348449858358f2762b24c0be/cocotb-bus-0.2.1.tar.gz", hash = "sha256:a197aa4b0e0ad28469c8877b41b3fb2ec0206da9f491b9276d1578ce6dd8aa8d", size = 28461, upload-time = "2022-01-22T01:31:53.29Z" }
-
-[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -60,7 +51,6 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "cocotb" },
-    { name = "cocotb-bus" },
     { name = "pyshark" },
     { name = "pytest" },
 ]
@@ -68,7 +58,6 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "cocotb", specifier = ">=1.9.2" },
-    { name = "cocotb-bus", specifier = ">=0.2.1" },
     { name = "pyshark", specifier = ">=0.6" },
     { name = "pytest", specifier = ">=8.4.2" },
 ]
