@@ -1,22 +1,22 @@
 import random
-from dataclasses import dataclass
 from typing import override
+from dataclasses import dataclass
 from cocotb.triggers import RisingEdge, ReadOnly
+from cocotb.handle import Immediate
 from testbench_lib.core import BaseDriver, Bytes
 
 @dataclass
 class AXI4SDriver(BaseDriver):
-    stall_probability: float = 0.0
 
     def __post_init__(self):
-        self.axi_width = self.port.tdata.width()
+        self.axi_width = len(self.port.tdata)
         assert self.axi_width % 8 == 0, "TDATA width must be an integer multiple of 8 bits"
         self.byte_width = self.axi_width // 8
 
-        self.port.tvalid.setimmediatevalue(0)
-        self.port.tdata.setimmediatevalue(0)
-        self.port.tlast.setimmediatevalue(0)
-        self.port.tkeep.setimmediatevalue(0)
+        self.port.tvalid.set(Immediate(0))
+        self.port.tdata.set(Immediate(0))
+        self.port.tlast.set(Immediate(0))
+        self.port.tkeep.set(Immediate(0))
 
     @override
     async def _drive_transaction(self, data: Bytes):
@@ -31,7 +31,7 @@ class AXI4SDriver(BaseDriver):
             self.port.tkeep.value = (1 << len(chunk)) - 1
 
             while True:
-                self.port.tvalid.value = int(random.random() > self.stall_probability)
+                self.port.tvalid.value = int(random.random() > self._config["driver_stall_probability"])
                 await ReadOnly()
                 if self.port.tvalid.value:
                     break

@@ -1,46 +1,38 @@
 import random
+from typing import Any
 
 import cocotb
-from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ClockCycles
-
 from testbench_lib.axi import AXI4SBus, AXI4SDriver, AXI4SMonitor
+from testbench_lib.core import BaseScoreboard, BaseEnvironment, ResetSequence, Module, BASE_CONFIG
+
 from testbench_lib.core import BaseScoreboard, Bytes, Module
 
-random.seed(0)
+def random_byte_stream(config: dict[str, Any]) -> list[Bytes]:
+    transactions = []
+    for _ in range(config["num_transactions"]):
+        random_bytes = []
+        for _ in range(random.randint(1, config["max_packet_size"])):
+            random_bytes.append(random.getrandbits(8))
+        transactions.append(Bytes(random_bytes))
+    return transactions
 
-def random_bytes(n: int) -> Bytes:
-    return Bytes(random.getrandbits(8) for _ in range(n))
+def build_config() -> dict[str, Any]:
+    base = BASE_CONFIG.copy()
+    base["scoreboard_expected_matches"] = 1000
 
-async def watchdog(clock, timeout_cycles: int):
-    await ClockCycles(clock, timeout_cycles)
-    raise TimeoutError(f"Simulation timed out after {timeout_cycles} clock cycles")
+    config = {
+        "monitor_stall_probability" : None, # Chance of AXI slave not ready.
+        "driver_stall_probability"  : None, # Chance of Master not ready (valid low).
+        "num_transactions"          : 1000,
+        "max_packet_size"           : 64,
+    }
 
-async def reset_sequence(reset, clock, cycles: int = 10) -> None:
-    reset.value = 1
-    for _ in range(cycles):
-        await RisingEdge(clock)
-    reset.value = 0
-    await RisingEdge(clock)
+    return base | config
 
-@cocotb.test()
-async def test_skid_buffer(dut):
-    module = Module(dut)
 
-    # ------------------------------------------------------------------
-    #  Configuration
-    # ------------------------------------------------------------------
+def build_env(module: Module) -> BaseEnvironment:
 
-    NSAMPLES = 10000 # how many packets
-    MAX_PACKET_SIZE  = 64 # max payload length
-    SLAVE_STALL_PROBABILITY = 0.1 # Chance of AXI slave not ready.
-    MASTER_STALL_PROBABILITY = 0.1 # Chance of Master not ready (valid low).
-
-    # ------------------------------------------------------------------
-    #  Hook up interfaces
-    # ------------------------------------------------------------------
-
-    s_axis = AXI4SBus(
+    slave_axis = AXI4SBus(
         module  = module,
         signals = {
             "tdata"  : "s_tdata_o",
@@ -51,7 +43,7 @@ async def test_skid_buffer(dut):
         }
     )
 
-    m_axis = AXI4SBus(
+    master_axis = AXI4SBus(
         module  = module,
         signals = {
             "tdata"  : "m_tdata_i",
@@ -61,38 +53,49 @@ async def test_skid_buffer(dut):
             "tkeep"  : "m_tkeep_i",
         }
     )
-
-    scoreboard = BaseScoreboard(
-        process_transaction_callback=lambda x: x,
-        expected_matches=NSAMPLES,
+    env = BaseEnvironment()
+    env.set_clock(module.clk_i)
+    env.add_reset(
+        ResetSequence(
+            clock      = module.clk_i,
+            reset      = module.rst_i,
+            num_cycles = 10
+        )
+    )
+    env.set_scoreboard(
+        BaseScoreboard(
+            process_transaction_callback=lambda x: x,
+        )
+    )
+    env.add_driver(
+        "AXI4S Master Driver",
+        AXI4SDriver(
+            clock             = module.clk_i,
+            port              = master_axis,
+            expect_callback   = env._scoreboard.expect_transaction,
+        ),
+        transaction_generator = random_byte_stream
+    )
+    env.add_monitor(
+        "AXI4S Slave Monitor",
+        AXI4SMonitor(
+            clock             = module.clk_i,
+            port              = slave_axis,
+            receive_callback  = env._scoreboard.receive_transaction,
+        )
     )
 
-    driver = AXI4SDriver(
-        clock             = module.clk_i,
-        port              = m_axis,
-        pre_delay_range   = range(0, 10),
-        post_delay_range  = range(0, 10),
-        stall_probability = MASTER_STALL_PROBABILITY,
-        expect_callback   = scoreboard.expect_transaction,
-    )
+    return env
 
-    monitor = AXI4SMonitor(
-        clock             = module.clk_i,
-        port              = s_axis,
-        receive_callback  = scoreboard.receive_transaction,
-        stall_probability = SLAVE_STALL_PROBABILITY,
-    )
-
-    # ------------------------------------------------------------------
-    #  Stimulus – send N random packets
-    # ------------------------------------------------------------------
-    cocotb.start_soon(Clock(module.clk_i, 10, 'ns').start(start_high=False))
-    monitor.start()
-
-    await reset_sequence(module.rst_i, module.clk_i)
-
-    transactions = [random_bytes(random.randint(1, MAX_PACKET_SIZE)) for _ in range(NSAMPLES)]
-    driver.load_transaction_queue(transactions)
-    driver.start()
-
-    await watchdog(module.clk_i, 1000000)
+@cocotb.test()
+@cocotb.parametrize(
+    master_stall_probability=[0, 0.1, 0.95],
+    slave_stall_probability=[0, 0.1, 0.95]
+)
+async def test(dut, master_stall_probability, slave_stall_probability):
+    env = build_env(Module(dut))
+    config = build_config()
+    config["driver_stall_probability"] = master_stall_probability
+    config["monitor_stall_probability"] = slave_stall_probability
+    env.set_configuration(config)
+    await env.run()

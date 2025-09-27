@@ -2,34 +2,40 @@ from dataclasses import dataclass, field
 from typing import Callable, Any
 from collections import deque
 
-from cocotb.result import TestSuccess
+import cocotb
 
-@dataclass
 class BaseScoreboard:
+    _process_transaction_callback: Callable[[Any], Any]
+    _config: dict[str, Any]
+    _expect_queue: deque = deque()
+    _receive_queue: deque = deque()
+    _received_matches: int = 0
 
-    process_transaction_callback: Callable[[Any], Any]
-    expected_matches: int
-
-    expect_queue: deque = field(default_factory=deque, init=False, repr=False)
-    receive_queue: deque = field(default_factory=deque, init=False, repr=False)
-    received_matches: int = field(default=0, init=False, repr=False)
+    def __init__(self, process_transaction_callback):
+        assert callable(process_transaction_callback)
+        self._process_transaction_callback = process_transaction_callback
 
     def _resolve_queues(self) -> None:
-        while self.expect_queue and self.receive_queue:
-            if self.expect_queue[0] == self.receive_queue[0]:
-                self.expect_queue.popleft()
-                self.receive_queue.popleft()
-                self.received_matches += 1
+        while self._expect_queue and self._receive_queue:
+            if self._expect_queue[0] == self._receive_queue[0]:
+                self._expect_queue.popleft()
+                self._receive_queue.popleft()
+                self._received_matches += 1
             else:
-                raise ValueError(f"Scoreboard mismatch: expected {self.expect_queue[0]}, received {self.receive_queue[0]}")
+                raise ValueError(f"Scoreboard mismatch: expected {self._expect_queue[0]}, received {self._receive_queue[0]}")
             
-        if self.received_matches == self.expected_matches:
-            raise TestSuccess()
+        if self._received_matches == self._config["scoreboard_expected_matches"]:
+            cocotb.pass_test()
+
+    def set_config(self, config: dict[str, Any]):
+        assert isinstance(config, dict)
+        self._config = config
 
     def expect_transaction(self, transaction) -> None:
-        self.expect_queue.append(self.process_transaction_callback(transaction))
+        assert self._process_transaction_callback is not None
+        self._expect_queue.append(self._process_transaction_callback(transaction))
         self._resolve_queues()
 
     def receive_transaction(self, transaction) -> None:
-        self.receive_queue.append(transaction)
+        self._receive_queue.append(transaction)
         self._resolve_queues()
