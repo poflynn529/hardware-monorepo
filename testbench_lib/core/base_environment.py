@@ -7,7 +7,8 @@ from base_scoreboard import BaseScoreboard
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ClockCycles
+from cocotb.triggers import RisingEdge, ClockCycles, Combine
+from cocotb.task import Task
 from cocotb.handle import LogicObject
 
 BASE_CONFIG: dict[str, Any] = {
@@ -26,12 +27,14 @@ class ResetSequence:
     reset: LogicObject
     num_cycles: int
 
-    async def reset_sequence(self) -> None:
+    async def _reset_sequence(self) -> None:
         self.reset.value = 1
         await ClockCycles(self.clock, self.num_cycles)
         self.reset.value = 0
         await RisingEdge(self.clock)
 
+    def start(self) -> Task:
+        return cocotb.start_soon(self._reset_sequence())
 
 class BaseEnvironment:
     _config: dict[str, Any]
@@ -81,8 +84,8 @@ class BaseEnvironment:
             monitor.set_config(self._config)
             monitor.start()
 
-        for reset in self._resets:
-            await reset.reset_sequence() # TODO: Use Join here to do these in parallel.
+        tasks = [reset.start() for reset in self._resets]
+        await Combine(*tasks)
 
         for name, driver in self._drivers.items():
             driver.set_config(self._config)
