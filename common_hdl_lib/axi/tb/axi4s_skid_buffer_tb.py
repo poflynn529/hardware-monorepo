@@ -87,7 +87,10 @@ def build_env(module: Module) -> BaseEnvironment:
 
     return env
 
-@cocotb.test()
+@cocotb.test(
+    timeout_time=BASE_CONFIG["timeout_cycles"] * BASE_CONFIG["clock_period"],
+    timeout_unit=BASE_CONFIG["timescale"]
+)
 @cocotb.parametrize(
     master_stall_probability=[0, 0.1, 0.95],
     slave_stall_probability=[0, 0.1, 0.95]

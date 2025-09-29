@@ -49,8 +49,3 @@ class BaseDriver:
             raise RuntimeError("Transaction queue not loaded.")
         if self._task is None:
             self._task = cocotb.start_soon(self._send())
-
-    def stop(self) -> None:
-        if self._task is not None:
-            self._task.kill()
-            self._task = None

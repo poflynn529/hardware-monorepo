@@ -27,8 +27,3 @@ class BaseMonitor:
     def start(self) -> None:
         if self._task is None:
             self._task = cocotb.start_soon(self._receive())
-
-    def stop(self) -> None:
-        if self._task is not None:
-            self._task.kill()
-            self._task = None

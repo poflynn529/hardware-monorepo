@@ -15,7 +15,7 @@ BASE_CONFIG: dict[str, Any] = {
     "scoreboard_expected_matches" : None,
     "clock_period"                : 10,
     "timescale"                   : 'ns',
-    "watchdog_timeout_cycles"     : 1000000,
+    "timeout_cycles"              : 1000000,
     "monitor_stall_probability"   : 0,
     "driver_pre_delay_range"      : range(0, 10),
     "driver_post_delay_range"     : range(0, 10),
@@ -37,13 +37,15 @@ class ResetSequence:
         return cocotb.start_soon(self._reset_sequence())
 
 class BaseEnvironment:
-    _config: dict[str, Any]
-    _scoreboard: BaseScoreboard
-    _drivers: dict[str, BaseDriver] = {}
-    _driver_transaction_generators: dict[str, BaseDriver] = {}
-    _monitors: dict[str, BaseMonitor] = {}
-    _resets: list[ResetSequence] = []
-    _clock: LogicObject
+
+    def __init__(self):
+        self._config: dict[str, Any]
+        self._scoreboard: BaseScoreboard
+        self._drivers: dict[str, BaseDriver] = {}
+        self._driver_transaction_generators: dict[str, BaseDriver] = {}
+        self._monitors: dict[str, BaseMonitor] = {}
+        self._resets: list[ResetSequence] = []
+        self._clock: LogicObject
 
     def set_configuration(self, config: dict[str, Any]) -> None:
         self._config = config
@@ -70,11 +72,6 @@ class BaseEnvironment:
         assert isinstance(monitor, BaseMonitor)
         self._monitors[name] = monitor
 
-    # TODO: Investigate if cocotb already has this built in.
-    async def _watchdog(self) -> None:
-        await ClockCycles(self._clock, self._config["watchdog_timeout_cycles"])
-        raise TimeoutError(f"Simulation timed out after {self._config["watchdog_timeout_cycles"]} clock cycles")
-
     async def run(self) -> None:
         cocotb.start_soon(Clock(self._clock, self._config["clock_period"], self._config["timescale"]).start(start_high=False))
 
@@ -92,4 +89,4 @@ class BaseEnvironment:
             driver.load_transaction_queue(self._driver_transaction_generators[name](self._config))
             driver.start()
 
-        await self._watchdog()
+        await self._scoreboard.start()

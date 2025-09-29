@@ -1,19 +1,18 @@
-from dataclasses import dataclass, field
 from typing import Callable, Any
 from collections import deque
 
-import cocotb
+from cocotb.triggers import Event
 
 class BaseScoreboard:
-    _process_transaction_callback: Callable[[Any], Any]
-    _config: dict[str, Any]
-    _expect_queue: deque = deque()
-    _receive_queue: deque = deque()
-    _received_matches: int = 0
 
-    def __init__(self, process_transaction_callback):
+    def __init__(self, process_transaction_callback: Callable[[Any], Any]):
         assert callable(process_transaction_callback)
-        self._process_transaction_callback = process_transaction_callback
+        self._process_transaction_callback: Callable[[Any], Any] = process_transaction_callback
+        self._config: dict[str, Any] = {}
+        self._expect_queue: deque = deque()
+        self._receive_queue: deque = deque()
+        self._received_matches: int = 0
+        self._done: Event = Event()
 
     def _resolve_queues(self) -> None:
         while self._expect_queue and self._receive_queue:
@@ -25,7 +24,7 @@ class BaseScoreboard:
                 raise ValueError(f"Scoreboard mismatch: expected {self._expect_queue[0]}, received {self._receive_queue[0]}")
             
         if self._received_matches == self._config["scoreboard_expected_matches"]:
-            cocotb.pass_test()
+            self._done.set()
 
     def set_config(self, config: dict[str, Any]):
         assert isinstance(config, dict)
@@ -39,3 +38,6 @@ class BaseScoreboard:
     def receive_transaction(self, transaction) -> None:
         self._receive_queue.append(transaction)
         self._resolve_queues()
+
+    async def start(self):
+        await self._done.wait()
