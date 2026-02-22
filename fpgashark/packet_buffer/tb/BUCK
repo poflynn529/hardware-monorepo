@@ -1,0 +1,13 @@
+load("//buck2:cocotb_test.bzl", "cocotb_test")
+
+cocotb_test(
+    name = "packet_buffer_test",
+    sim = "//fpgashark/packet_buffer:packet_buffer_sim",
+    test_module = "packet_buffer_tb_top",
+    venv = "/home/poflynn/src/hardware-monorepo/.venv",
+    python_path = [
+        "/home/poflynn/src/hardware-monorepo/testbench_lib/axi",
+        "/home/poflynn/src/hardware-monorepo/testbench_lib/core",
+        "/home/poflynn/src/hardware-monorepo/fpgashark/packet_buffer/tb",
+    ],
+)

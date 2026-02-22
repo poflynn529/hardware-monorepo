@@ -1,0 +1,41 @@
+load("//buck2:sv_library.bzl", "sv_library")
+load("//buck2:verilator_sim.bzl", "verilator_sim")
+
+sv_library(
+    name = "packet_buffer_pkg",
+    srcs = ["pkg/packet_buffer_pkg.sv"],
+    visibility = ["PUBLIC"],
+)
+
+sv_library(
+    name = "packet_buffer_write_controller",
+    srcs = ["src/packet_buffer_write_controller.sv"],
+    deps = [
+        ":packet_buffer_pkg",
+        "//common_hdl_lib/utils:utils",
+    ],
+)
+
+sv_library(
+    name = "packet_buffer",
+    srcs = ["src/packet_buffer.sv"],
+    deps = [
+        ":packet_buffer_pkg",
+        ":packet_buffer_write_controller",
+        "//common_hdl_lib/axi:axi4s_skid_buffer",
+        "//common_hdl_lib/fifo:fifo36e2_wrapper",
+        "//common_hdl_lib/mux:vector_muxcy",
+        "//common_hdl_lib/utils:utils",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+verilator_sim(
+    name = "packet_buffer_sim",
+    top_module = "packet_buffer",
+    deps = [":packet_buffer"],
+    compile_args = ["-Wno-fatal"],
+    cocotb_lib_dir = "/home/poflynn/src/hardware-monorepo/.venv/lib/python3.13/site-packages/cocotb/libs",
+    verilator_cpp = "/home/poflynn/src/hardware-monorepo/.venv/lib/python3.13/site-packages/cocotb/share/lib/verilator/verilator.cpp",
+    visibility = ["PUBLIC"],
+)

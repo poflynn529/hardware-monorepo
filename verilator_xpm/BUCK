@@ -1,0 +1,7 @@
+load("//buck2:sv_library.bzl", "sv_library")
+
+sv_library(
+    name = "xilinx_primitives",
+    srcs = glob(["*.v"]),
+    visibility = ["PUBLIC"],
+)

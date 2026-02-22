@@ -1,0 +1,7 @@
+load("//buck2:sv_library.bzl", "sv_library")
+
+sv_library(
+    name = "utils",
+    srcs = ["src/utils.sv"],
+    visibility = ["PUBLIC"],
+)

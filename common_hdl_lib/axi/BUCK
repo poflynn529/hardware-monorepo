@@ -1,0 +1,7 @@
+load("//buck2:sv_library.bzl", "sv_library")
+
+sv_library(
+    name = "axi4s_skid_buffer",
+    srcs = ["src/axi4s_skid_buffer.sv"],
+    visibility = ["PUBLIC"],
+)

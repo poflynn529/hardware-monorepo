@@ -4,7 +4,6 @@ import pyshark
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, ClockCycles
-from cocotb.result import TestFailure
 from cocotb_bus.drivers import Driver
 
 from testbench_lib.axi.axi4stream_driver import AXI4SBus, AXI4SDriver

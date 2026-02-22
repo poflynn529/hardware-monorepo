@@ -1,0 +1,10 @@
+load("//buck2:sv_library.bzl", "sv_library")
+
+sv_library(
+    name = "fifo36e2_wrapper",
+    srcs = ["src/fifo36e2_wrapper.sv"],
+    deps = [
+        "//verilator_xpm:xilinx_primitives",
+    ],
+    visibility = ["PUBLIC"],
+)
