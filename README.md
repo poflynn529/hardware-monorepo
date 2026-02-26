@@ -1,6 +1,6 @@
 # hardware-monorepo
 
-My personal repository for hardware designs, mostly targetting Xilinx FPGAs. Build system is FuseSoC and TBs are mostly cocotb.
+My personal repository for hardware related projects. I mostly use this for playing around with new tools and quick evaluations.
 
 ## Setup
 
@@ -9,32 +9,23 @@ My personal repository for hardware designs, mostly targetting Xilinx FPGAs. Bui
 - [Verilator](https://verilator.org/guide/latest/install.html)
 - [Surfer](https://surfer-project.org/)
 - [uv](https://github.com/astral-sh/uv)
+- [Buck2](https://buck2.build/)
 
 ### Virtual Environment
 
 Create and activate a Python virtual environment:
 
 ```bash
-# Create virtual environment:
-uv venv
+# Build the virtual environment:
+uv sync
 ```
 
 ## Running Simulations
 
 ```bash
 # Run cocotb and verilator:
-make -f common_hdl_lib/axi/tb/Makefile
+buck2 build //common_hdl_lib/axi/tb:axi4s_skid_buffer_test
 
 # View the dump.fst output file:
 surfer dump.fst
-```
-
-## Notes
-
-List of the packages I had to install for this project that `dnf` didn't pick up (May differ on your system):
-
-```
-gcc-c++
-python3.13-devel
-zlib-devel
 ```
