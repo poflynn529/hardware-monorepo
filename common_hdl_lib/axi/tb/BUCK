@@ -1,20 +1,20 @@
-load("//buck2:verilator_sim.bzl", "verilator_sim")
+load("//buck2:verilator_sim.bzl", "verilator_model")
 load("//buck2:cocotb_test.bzl", "cocotb_test")
 
-verilator_sim(
-    name = "axi4s_skid_buffer_sim",
+verilator_model(
+    name = "axi4s_skid_buffer_model",
     top_module = "axi4s_skid_buffer",
     deps = ["//common_hdl_lib/axi:axi4s_skid_buffer"],
     compile_args = ["-Wno-fatal"],
-    cocotb_lib_dir = "/home/poflynn/src/hardware-monorepo/.venv/lib/python3.13/site-packages/cocotb/libs",
-    verilator_cpp = "/home/poflynn/src/hardware-monorepo/.venv/lib/python3.13/site-packages/cocotb/share/lib/verilator/verilator.cpp",
     visibility = ["PUBLIC"],
 )
 
 cocotb_test(
     name = "axi4s_skid_buffer_test",
-    sim = ":axi4s_skid_buffer_sim",
+    model = ":axi4s_skid_buffer_model",
     test_module = "axi4s_skid_buffer_tb",
+    cocotb_lib_dir = "/home/poflynn/src/hardware-monorepo/.venv/lib/python3.13/site-packages/cocotb/libs",
+    verilator_cpp = "/home/poflynn/src/hardware-monorepo/.venv/lib/python3.13/site-packages/cocotb/share/lib/verilator/verilator.cpp",
     venv = "/home/poflynn/src/hardware-monorepo/.venv",
     python_path = [
         "/home/poflynn/src/hardware-monorepo",

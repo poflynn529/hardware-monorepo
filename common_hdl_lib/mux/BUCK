@@ -1,12 +1,12 @@
-load("//buck2:sv_library.bzl", "sv_library")
+load("//buck2:system_verilog.bzl", "sv_module_library")
 
-sv_library(
+sv_module_library(
     name = "vector_muxcy",
     srcs = ["src/vector_muxcy.sv"],
     visibility = ["PUBLIC"],
 )
 
-sv_library(
+sv_module_library(
     name = "modulo",
     srcs = ["src/modulo.sv"],
     visibility = ["PUBLIC"],

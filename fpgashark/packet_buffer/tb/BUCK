@@ -2,8 +2,10 @@ load("//buck2:cocotb_test.bzl", "cocotb_test")
 
 cocotb_test(
     name = "packet_buffer_test",
-    sim = "//fpgashark/packet_buffer:packet_buffer_sim",
+    model = "//fpgashark/packet_buffer:packet_buffer_model",
     test_module = "packet_buffer_tb_top",
+    cocotb_lib_dir = "/home/poflynn/src/hardware-monorepo/.venv/lib/python3.13/site-packages/cocotb/libs",
+    verilator_cpp = "/home/poflynn/src/hardware-monorepo/.venv/lib/python3.13/site-packages/cocotb/share/lib/verilator/verilator.cpp",
     venv = "/home/poflynn/src/hardware-monorepo/.venv",
     python_path = [
         "/home/poflynn/src/hardware-monorepo/testbench_lib/axi",

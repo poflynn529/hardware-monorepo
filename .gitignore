@@ -1,5 +1,6 @@
 .venv
 .data
+.Xil
 __pycache__/
 *.fst
 results.xml

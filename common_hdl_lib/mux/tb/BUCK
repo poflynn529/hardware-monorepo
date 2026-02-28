@@ -1,0 +1,44 @@
+load("//buck2:system_verilog.bzl", "sv_module_library")
+load(":macros.bzl", "modulo_tests")
+
+sv_module_library(
+    name = "modulo_harness",
+    srcs = ["modulo_harness.sv"],
+    deps = ["//common_hdl_lib/mux:modulo"],
+)
+
+_PYTHON_PATH = ["/home/poflynn/src/hardware-monorepo/common_hdl_lib/mux/tb"]
+
+# DATA_WIDTH=8: powers of 2 (gen_pow2), small non-powers (gen_barrett),
+# near-boundary (253, 255) where MAGIC ≈ 1.
+modulo_tests(
+    moduli = [
+        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13,
+        16, 17, 31, 100, 127, 200, 253, 255,
+    ],
+    python_path = _PYTHON_PATH,
+)
+
+# DATA_WIDTH=16 (65 536 inputs): 4-digit moduli.
+# 9001 is prime; 9999 = 3^2 * 11 * 101 (composite); 1009 is prime.
+modulo_tests(
+    moduli      = [1009, 9001, 9999],
+    python_path = _PYTHON_PATH,
+    data_width  = 16,
+)
+
+# DATA_WIDTH=18 (262 144 inputs): 5-digit moduli.
+# 65537 = 2^16 + 1 (Fermat prime F4); 10007 and 99991 are prime.
+modulo_tests(
+    moduli      = [10007, 65537, 99991],
+    python_path = _PYTHON_PATH,
+    data_width  = 18,
+)
+
+# DATA_WIDTH=20 (1 048 576 inputs): 6-digit moduli.
+# 524287 = 2^19 - 1 (Mersenne prime); 100003 and 999983 are prime.
+modulo_tests(
+    moduli      = [100003, 524287, 999983],
+    python_path = _PYTHON_PATH,
+    data_width  = 20,
+)

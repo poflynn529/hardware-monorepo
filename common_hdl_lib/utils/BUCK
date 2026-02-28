@@ -1,6 +1,6 @@
-load("//buck2:sv_library.bzl", "sv_library")
+load("//buck2:system_verilog.bzl", "sv_module_library")
 
-sv_library(
+sv_module_library(
     name = "utils",
     srcs = ["src/utils.sv"],
     visibility = ["PUBLIC"],

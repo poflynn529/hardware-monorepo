@@ -1,26 +1,62 @@
-load("//buck2:verilator_sim.bzl", "VerilatorSimInfo")
+load("//buck2:verilator_sim.bzl", "VerilatorModelInfo")
 
 def _cocotb_test_impl(ctx: AnalysisContext) -> list[Provider]:
-    sim_info = ctx.attrs.sim[VerilatorSimInfo]
-    vtop = sim_info.executable
+    model_info = ctx.attrs.model[VerilatorModelInfo]
 
+    vtop = ctx.actions.declare_output("Vtop")
     results_xml = ctx.actions.declare_output("results.xml")
     dump_fst = ctx.actions.declare_output("dump.fst")
 
-    # Build PYTHONPATH from python_path entries
+    # ── Link action ──────────────────────────────────────────────────────────
+    runtime_cpps = [
+        "$VERILATOR_ROOT/include/verilated.cpp",
+        "$VERILATOR_ROOT/include/verilated_vpi.cpp",
+        "$VERILATOR_ROOT/include/verilated_threads.cpp",
+    ]
+    if model_info.trace:
+        runtime_cpps.append("$VERILATOR_ROOT/include/verilated_fst_c.cpp")
+
+    link_args = [
+        "g++", "-std=c++17", "-O2", "-o", vtop.as_output(),
+        cmd_args("-I", model_info.include_dir, delimiter = ""),
+        "-I$VERILATOR_ROOT/include",
+        "-I$VERILATOR_ROOT/include/vltstd",
+        ctx.attrs.verilator_cpp,
+    ] + runtime_cpps + [
+        model_info.lib,
+        "-Wl,-rpath,{l} -L{l} -lcocotbvpi_verilator".format(l = ctx.attrs.cocotb_lib_dir),
+        "-lz",
+    ]
+
+    link_script = ctx.actions.write(
+        "verilator_link.sh",
+        cmd_args(
+            "#!/bin/bash",
+            "set -e",
+            "VERILATOR_ROOT=$(verilator --getenv VERILATOR_ROOT)",
+            cmd_args(link_args, delimiter = " "),
+            delimiter = "\n",
+        ),
+        is_executable = True,
+    )
+
+    ctx.actions.run(
+        cmd_args(["bash", link_script], hidden = [model_info.lib, model_info.include_dir, vtop.as_output()]),
+        category = "verilator_link",
+    )
+
+    # ── Test-run action ───────────────────────────────────────────────────────
     python_path = ":".join(ctx.attrs.python_path)
 
-    # Build env export lines
     env_lines = []
 
-    # Add venv site-packages for embedded Python (cocotb VPI uses dlopen'd libpython)
     if ctx.attrs.venv:
         env_lines.append("export VIRTUAL_ENV={}".format(ctx.attrs.venv))
         env_lines.append("export PYGPI_PYTHON_BIN={}/bin/python3".format(ctx.attrs.venv))
         env_lines.append("VENV_SITE=$({venv}/bin/python3 -c \"import site; print(':'.join(site.getsitepackages()))\")".format(venv = ctx.attrs.venv))
 
     env_lines.append(cmd_args("export COCOTB_TEST_MODULES=", ctx.attrs.test_module, delimiter = ""))
-    env_lines.append(cmd_args("export COCOTB_TOPLEVEL=", sim_info.top_module, delimiter = ""))
+    env_lines.append(cmd_args("export COCOTB_TOPLEVEL=", model_info.top_module, delimiter = ""))
     env_lines.append("export TOPLEVEL_LANG=verilog")
     pythonpath_parts = []
     if python_path:
@@ -33,11 +69,10 @@ def _cocotb_test_impl(ctx: AnalysisContext) -> list[Provider]:
     for key, value in ctx.attrs.env.items():
         env_lines.append("export {}=\"{}\"".format(key, value))
 
-    # Copy commands - cd back to ROOTDIR first so relative artifact paths work
     cp_results = cmd_args("cp \"$WORKDIR/results.xml\"", results_xml.as_output(), "2>/dev/null || echo '<testsuites/>' >", results_xml.as_output(), delimiter = " ")
     cp_fst = cmd_args("cp \"$WORKDIR/dump.fst\"", dump_fst.as_output(), "2>/dev/null || touch", dump_fst.as_output(), delimiter = " ")
 
-    lines = [
+    test_lines = [
         "#!/bin/bash",
         "set +e",
         "ROOTDIR=$(pwd)",
@@ -61,19 +96,16 @@ def _cocotb_test_impl(ctx: AnalysisContext) -> list[Provider]:
         "fi",
     ]
 
-    script_content = cmd_args(lines, delimiter = "\n")
-
     test_script = ctx.actions.write(
         "cocotb_run.sh",
-        script_content,
+        cmd_args(test_lines, delimiter = "\n"),
         is_executable = True,
     )
 
-    cmd = cmd_args(
-        ["bash", test_script],
-        hidden = [vtop, results_xml.as_output(), dump_fst.as_output()],
+    ctx.actions.run(
+        cmd_args(["bash", test_script], hidden = [vtop, results_xml.as_output(), dump_fst.as_output()]),
+        category = "cocotb_test",
     )
-    ctx.actions.run(cmd, category = "cocotb_test")
 
     return [
         DefaultInfo(
@@ -87,8 +119,10 @@ def _cocotb_test_impl(ctx: AnalysisContext) -> list[Provider]:
 cocotb_test = rule(
     impl = _cocotb_test_impl,
     attrs = {
-        "sim": attrs.dep(providers = [VerilatorSimInfo]),
+        "model": attrs.dep(providers = [VerilatorModelInfo]),
         "test_module": attrs.string(),
+        "cocotb_lib_dir": attrs.string(),
+        "verilator_cpp": attrs.string(),
         "python_path": attrs.list(attrs.string(), default = []),
         "venv": attrs.string(default = ""),
         "env": attrs.dict(key = attrs.string(), value = attrs.string(), default = {}),

@@ -1,0 +1,29 @@
+load("//buck2:vivado_synth.bzl", "vivado_synth", "vivado_compare")
+
+_DEPS       = ["//common_hdl_lib/mux:modulo"]
+_PARAMS     = {"DATA_WIDTH": "20", "MODULUS": "999983"}
+_PART       = "xc7a100tcsg324-1"
+_PYTHON_BIN = "/home/poflynn/src/hardware-monorepo/.venv/bin/python3"
+
+vivado_synth(
+    name       = "naive_m999983",
+    top_module = "modulo_naive",
+    deps       = _DEPS,
+    parameters = _PARAMS,
+    part       = _PART,
+)
+
+vivado_synth(
+    name       = "barrett_m999983",
+    top_module = "modulo_barrett",
+    deps       = _DEPS,
+    parameters = _PARAMS,
+    part       = _PART,
+)
+
+vivado_compare(
+    name           = "compare_m999983",
+    synths         = [":naive_m999983", ":barrett_m999983"],
+    compare_script = "compare.py",
+    python_bin     = _PYTHON_BIN,
+)
