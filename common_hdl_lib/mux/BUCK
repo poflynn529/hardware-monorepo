@@ -5,3 +5,9 @@ sv_library(
     srcs = ["src/vector_muxcy.sv"],
     visibility = ["PUBLIC"],
 )
+
+sv_library(
+    name = "modulo",
+    srcs = ["src/modulo.sv"],
+    visibility = ["PUBLIC"],
+)

@@ -4,7 +4,7 @@ module vector_muxcy #(
     parameter COMPARE_MODE = "MIN",   // TODO: Implement "MAX"
     parameter IF_EQUAL_MODE = "FIRST" // TODO: Implement "LAST"
 )(
-    input  logic [INPUT_WIDTH - 1:0]         data_i [NUM_INPUTS - 1:0],
+    input  logic [INPUT_WIDTH - 1:0]        data_i [NUM_INPUTS - 1:0],
     output logic [$clog2(NUM_INPUTS) - 1:0] muxcy_o
 );
     logic [INPUT_WIDTH - 1:0] best_level_w;

@@ -8,29 +8,8 @@ VerilatorSimInfo = provider(fields = {
 def _verilator_sim_impl(ctx: AnalysisContext) -> list[Provider]:
     vtop = ctx.actions.declare_output("Vtop")
 
-    sources = []
-    include_dirs = []
-    for dep in ctx.attrs.deps:
-        info = dep[SvSourcesInfo]
-        sources.extend(info.transitive_sources)
-        include_dirs.extend(info.transitive_include_dirs)
-
-    # Deduplicate while preserving order
-    seen_sources = {}
-    unique_sources = []
-    for src in sources:
-        key = src.short_path
-        if key not in seen_sources:
-            seen_sources[key] = True
-            unique_sources.append(src)
-
-    seen_dirs = {}
-    unique_dirs = []
-    for d in include_dirs:
-        key = str(d)
-        if key not in seen_dirs:
-            seen_dirs[key] = True
-            unique_dirs.append(d)
+    unique_sources = depset(transitive = [dep[SvSourcesInfo].transitive_sources for dep in ctx.attrs.deps]).list()
+    unique_dirs = depset(transitive = [dep[SvSourcesInfo].transitive_include_dirs for dep in ctx.attrs.deps]).list()
 
     # Build verilator args list for space-delimited joining
     vargs = ["verilator", "-cc", "--exe", "--vpi", "--public-flat-rw", "--prefix", "Vtop"]

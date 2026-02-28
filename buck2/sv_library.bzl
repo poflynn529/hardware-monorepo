@@ -9,17 +9,16 @@ def _sv_library_impl(ctx: AnalysisContext) -> list[Provider]:
     sources = ctx.attrs.srcs
     include_dirs = ctx.attrs.include_dirs
 
-    # Deps first so packages are declared before files that import them
-    transitive_sources = []
-    transitive_include_dirs = []
-
-    for dep in ctx.attrs.deps:
-        dep_info = dep[SvSourcesInfo]
-        transitive_sources.extend(dep_info.transitive_sources)
-        transitive_include_dirs.extend(dep_info.transitive_include_dirs)
-
-    transitive_sources.extend(sources)
-    transitive_include_dirs.extend(include_dirs)
+    transitive_sources = depset(
+        direct = sources,
+        transitive = [dep[SvSourcesInfo].transitive_sources for dep in ctx.attrs.deps],
+        order = "postorder",
+    )
+    transitive_include_dirs = depset(
+        direct = include_dirs,
+        transitive = [dep[SvSourcesInfo].transitive_include_dirs for dep in ctx.attrs.deps],
+        order = "postorder",
+    )
 
     return [
         DefaultInfo(default_output = ctx.actions.symlinked_dir("srcs", {

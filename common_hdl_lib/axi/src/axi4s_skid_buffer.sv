@@ -12,7 +12,7 @@ module axi4s_skid_buffer #(
     output logic                       m_tready_o,
     input  logic                       m_tlast_i,
     input  logic [AXI_WIDTH / 8 - 1:0] m_tkeep_i,
-    
+
     // Downstream (Slave Side)
     output logic [AXI_WIDTH - 1:0]     s_tdata_o,
     output logic                       s_tvalid_o,
@@ -31,7 +31,7 @@ module axi4s_skid_buffer #(
     logic [AXI_WIDTH / 8 - 1:0] buffer_tkeep_r;
 
     assign m_tready_o = !skid_valid_r;
-    
+
     // Buffer process
     always @(posedge clk_i) begin
         if (m_tvalid_i && m_tready_o) begin
@@ -77,5 +77,5 @@ module axi4s_skid_buffer #(
     assign s_tdata_o  = skid_valid_r ? skid_tdata_r : buffer_tdata_r;
     assign s_tlast_o  = skid_valid_r ? skid_tlast_r : buffer_tlast_r;
     assign s_tkeep_o  = skid_valid_r ? skid_tkeep_r : buffer_tkeep_r;
-    
+
 endmodule
