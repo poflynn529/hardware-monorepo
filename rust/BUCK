@@ -1,0 +1,18 @@
+rust_library(
+    name = "hardware_monorepo",
+    srcs = ["src/lib.rs"],
+    crate_root = "src/lib.rs",
+    edition = "2021",
+    visibility = ["PUBLIC"],
+    deps = [
+        "third_party//rust:marlin-verilator",
+    ],
+)
+
+rust_binary(
+    name = "hello",
+    srcs = ["src/main.rs"],
+    crate_root = "src/main.rs",
+    edition = "2021",
+    visibility = ["PUBLIC"],
+)

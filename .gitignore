@@ -6,3 +6,4 @@ __pycache__/
 results.xml
 hardware_monorepo.egg-info
 buck-out/
+rust/target/
