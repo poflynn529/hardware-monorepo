@@ -1,4 +1,4 @@
-load("//buck2:system_verilog.bzl", "SvModuleTSet", "SvPackageTSet", "SvSourcesInfo")
+load("//buck2:system_verilog.bzl", "SvSourcesInfo", "collect_transitive_sv", "slang_order_cmd")
 
 VivadoSynthInfo = provider(fields = {
     "utilization_report": provider_field(typing.Any),
@@ -27,19 +27,7 @@ report_timing -delay_type max -max_paths 1 -nworst 1 -file $time_rpt
 """
 
 def _vivado_synth_impl(ctx: AnalysisContext) -> list[Provider]:
-    agg_pkgs = ctx.actions.tset(SvPackageTSet, children = [dep[SvSourcesInfo].transitive_packages for dep in ctx.attrs.deps])
-    agg_mods = ctx.actions.tset(SvModuleTSet, children = [dep[SvSourcesInfo].transitive_modules for dep in ctx.attrs.deps])
-
-    seen_pkgs = {}
-    unique_sources = []
-    for src_list in agg_pkgs.traverse(ordering = "postorder"):
-        for src in src_list:
-            if src.short_path not in seen_pkgs:
-                seen_pkgs[src.short_path] = True
-                unique_sources.append(src)
-
-    for src_list in agg_mods.traverse(ordering = "topological"):
-        unique_sources.extend(src_list)
+    sources, blackboxes, include_dirs = collect_transitive_sv(ctx, ctx.attrs.deps)
 
     util_report   = ctx.actions.declare_output("{}.utilization.rpt".format(ctx.attrs.top_module))
     timing_report = ctx.actions.declare_output("{}.timing.rpt".format(ctx.attrs.top_module))
@@ -58,15 +46,18 @@ def _vivado_synth_impl(ctx: AnalysisContext) -> list[Provider]:
         ),
     )
 
+    slang_cmd = slang_order_cmd(sources, include_dirs, ctx.attrs.top_module, "$WDIR/sv_order.txt")
+
     # flock serialises concurrent Vivado invocations (parallel Buck2 actions
     # share the same Vivado resource pool and crash otherwise).
     vivado_cmd = cmd_args(
         ["flock", "/tmp/vivado_synthesis.lock",
-         "vivado", "-mode", "batch", "-nojournal", "-nolog", "-source", tcl_file, "-tclargs"],
+         "vivado", "-mode", "batch", "-nojournal", "-nolog", "-source", tcl_file, "-tclargs",
+         "$(cat \"$WDIR/sv_order.txt\")"],
         delimiter = " ",
     )
-    for src in unique_sources:
-        vivado_cmd.add(src)
+    for bb in blackboxes:
+        vivado_cmd.add(bb)
     vivado_cmd.add(util_report.as_output())
     vivado_cmd.add(timing_report.as_output())
 
@@ -75,13 +66,19 @@ def _vivado_synth_impl(ctx: AnalysisContext) -> list[Provider]:
         cmd_args(
             "#!/bin/bash",
             "set -e",
+            "WDIR=$(mktemp -d)",
+            "trap 'rm -rf \"$WDIR\"' EXIT",
+            cmd_args(slang_cmd, delimiter = " "),
             vivado_cmd,
             delimiter = "\n",
         ),
         is_executable = True,
     )
     ctx.actions.run(
-        cmd_args(["bash", script], hidden = unique_sources + [tcl_file, util_report.as_output(), timing_report.as_output()]),
+        cmd_args(
+            ["bash", script],
+            hidden = sources + blackboxes + include_dirs + [tcl_file, util_report.as_output(), timing_report.as_output()],
+        ),
         category = "vivado_synth",
     )
 
@@ -134,10 +131,10 @@ def _vivado_compare_impl(ctx: AnalysisContext) -> list[Provider]:
     return [DefaultInfo(default_output = out)]
 
 vivado_compare = rule(
-    impl = _vivado_compare_impl,
     attrs = {
         "synths":         attrs.list(attrs.dep(providers = [VivadoSynthInfo])),
         "compare_script": attrs.source(),
         "python_bin":     attrs.string(default = "python3"),
     },
+    impl = _vivado_compare_impl,
 )

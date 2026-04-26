@@ -1,7 +1,8 @@
-load("//buck2:system_verilog.bzl", "sv_module_library")
+load("//buck2:system_verilog.bzl", "sv_library")
 
-sv_module_library(
+sv_library(
     name = "xilinx_primitives",
     srcs = glob(["*.v"]),
+    blackbox = True,
     visibility = ["PUBLIC"],
 )

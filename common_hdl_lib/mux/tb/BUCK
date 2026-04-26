@@ -1,7 +1,7 @@
-load("//buck2:system_verilog.bzl", "sv_module_library")
+load("//buck2:system_verilog.bzl", "sv_library")
 load(":macros.bzl", "modulo_tests")
 
-sv_module_library(
+sv_library(
     name = "modulo_harness",
     srcs = ["modulo_harness.sv"],
     deps = ["//common_hdl_lib/mux:modulo"],

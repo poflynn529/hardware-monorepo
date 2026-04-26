@@ -1,13 +1,13 @@
-load("//buck2:system_verilog.bzl", "sv_module_library", "sv_package")
+load("//buck2:system_verilog.bzl", "sv_library")
 load("//buck2:verilator_sim.bzl", "verilator_model")
 
-sv_package(
+sv_library(
     name = "packet_buffer_pkg",
-    src = "pkg/packet_buffer_pkg.sv",
+    srcs = ["pkg/packet_buffer_pkg.sv"],
     visibility = ["PUBLIC"],
 )
 
-sv_module_library(
+sv_library(
     name = "packet_buffer_write_controller",
     srcs = ["src/packet_buffer_write_controller.sv"],
     deps = [
@@ -16,7 +16,7 @@ sv_module_library(
     ],
 )
 
-sv_module_library(
+sv_library(
     name = "packet_buffer",
     srcs = ["src/packet_buffer.sv"],
     deps = [
